@@ -1,8 +1,9 @@
-import { Message } from "common";
+import { Message, MessageBase, GameAction } from "common";
 import { Socket } from "socket.io";
 import { Table } from "./manager";
 import { v4 as uuid } from 'uuid';
 import Player from "./player";
+import { EventDispatcher } from 'strongly-typed-events';
 
 /**
  * Use a session to associate a connected client to a socket.
@@ -15,6 +16,11 @@ export class Session {
   name: string;
   color: string;
   player: Player;
+
+  _onGameAction = new EventDispatcher<Session, GameAction.GameAction>();
+  get onGameAction() {
+    return this._onGameAction.asEvent();
+  }
 
   get connected() {
     return this._socket.connected;
@@ -37,6 +43,7 @@ export class Session {
     this._socket.onAny((...args) => console.log(this.name, JSON.stringify(args), '\n'));
     this._socket.on(Message.Type.ClientChat, (p) => this._handleIncomingChat(p));
     this._socket.on(Message.Type.Disconnect, (reason:string) => this.onDisconnect(socket, reason));
+    this._socket.on(Message.Type.GameAction, (p) => this._handleIncomingGameAction(p));
   }
 
   constructor(socket: Socket | null, table: Table, config: Message.Join.Payload) {
@@ -73,6 +80,15 @@ export class Session {
     this._socket.emit(sessionsData.header, sessionsData.payload);
   }
 
+  /**
+   * 
+   * @param payload Send a game action to a player
+   */
+  sendGameAction(poo: GameAction.GameAction) {
+    const m = new Message.ActionMessage(poo);
+    this._socket.emit(m.header, m.payload);
+  }
+
   /** 
    * Broadcast a socket's data to the table 
    */
@@ -86,7 +102,12 @@ export class Session {
     this.table.io.emit(message.header, message.payload);
   }
 
-  
+  /**
+   * Unpack a game action and dispatch its event
+   */
+  private _handleIncomingGameAction(payload: GameAction.GameAction) {
+    this._onGameAction.dispatch(this, payload);
+  }
 
 }
 
@@ -101,7 +122,6 @@ export class FakeSession extends Session {
 
   constructor(table: Table, config: Message.Join.Payload) {
     super(null, table, config);
-
   }
 
   setSocket() {

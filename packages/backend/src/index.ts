@@ -17,6 +17,10 @@ const io = require('socket.io')(server, {
 const m1 = new Table(io, 'room 1');
 
 io.on(Message.Type.Connect, (socket:Socket) => {
+
+  // Disable socket.send
+  socket.send = () => { throw new Error('Don\'t use socket.send()!'); }
+
   socket.on(Message.Type.Join, (payload: Message.Join.Payload) => {
     m1.join(socket, payload);
   });

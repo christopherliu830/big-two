@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { MessageBase, Message, PlayerConfig } from 'common';
+import { MessageBase, Message } from 'common';
 import { ISignal, SignalDispatcher } from'strongly-typed-events';
 
 

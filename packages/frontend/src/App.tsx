@@ -10,7 +10,7 @@ import { v4 as uuid } from 'uuid';
 import './style.css';
 
 import { GameManager } from './game-core/GameManager';
-import { Message, PlayerConfig } from 'common';
+import { Message } from 'common';
 
 export const App:React.FunctionComponent = (props) => {
   const [ connecting, setConnecting ] = useState(false); 

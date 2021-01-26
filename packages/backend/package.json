@@ -2,11 +2,12 @@
   "name": "big-two-server",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "./build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npm run build && node ./build/index.js --prefix ./",
-    "build": "tsc -b",
+    "restart" : "node ./build/index.js",
+    "build": "tsc",
     "postbuild": "npm run copy-files",
     "copy-files": "copyfiles public/* build"
   },

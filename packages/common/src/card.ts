@@ -1,8 +1,4 @@
-import { GameAction } from './src/actions';
-import { Message } from './src/network-message';
-import { MessageBase } from './src/message';
-
-namespace Card {
+export namespace Card {
 
   export enum Suit {
     Diamond = 0,
@@ -42,26 +38,4 @@ namespace Card {
     return deck;
   }
 
-}
-
-
-export { 
-  GameAction, 
-  Message, 
-  MessageBase, 
-  Card
-};
-
-
-/**
- * Shared message types between front and backend.
- * When sending in socket.io, create a subclassed Message and send
- * using .header and .payload.
- * When receiving, call .on(type, payload: Message.Payload)
- */
- 
-export interface PlayerConfig {
-  id: string; // player uuid
-  name: string;
-  color: string;
 }

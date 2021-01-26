@@ -1,3 +1,4 @@
+import { GameAction } from './actions';
 import { MessageBase } from './message';
 
 export namespace Message {
@@ -16,6 +17,7 @@ export namespace Message {
     Join = 'JOIN',
     JoinAck = 'JOIN_ACK',
     PlayCards = 'PLAY_CARD',
+    GameAction = 'GAME_ACTION',
 
   }
   export interface MessagePayload {};
@@ -23,7 +25,7 @@ export namespace Message {
     header: Type = Type.Join;
     payload: Join.Payload;
 
-    constructor(payload: { id: string, name: string, color: string }) {
+    constructor(payload: Join.Payload) {
       super();
       this.payload = payload;
     }
@@ -40,12 +42,7 @@ export namespace Message {
 
     payload: Chat.Payload;
 
-    constructor(payload: {
-      key: string,
-      message: string,
-      color: string,
-      sender: string,
-    }) {
+    constructor(payload: Chat.Payload) {
       super();
       this.payload = payload;
     }
@@ -62,7 +59,7 @@ export namespace Message {
     header: Type = Type.ClientChat;
     payload: FromClientChat.Payload;
 
-    constructor(payload: {message: string}) {
+    constructor(payload: FromClientChat.Payload) {
       super();
       this.payload = payload;
     }
@@ -76,7 +73,7 @@ export namespace Message {
     header: Type = Type.SessionsData;
     payload: SessionsData.Payload;
 
-    constructor(payload: SessionsData.Payload) {
+    constructor(payload: SessionsData) {
       super();
       this.payload = payload;
     }
@@ -92,5 +89,13 @@ export namespace Message {
       }[]
     }
   }
+  /** This is just the message wrapper for a GameAction */
+  export class ActionMessage {
+    header = Type.GameAction;
+    payload: GameAction.GameAction;
 
+    constructor(payload: GameAction.GameAction) {
+      this.payload = payload;
+    }
+  }
 }

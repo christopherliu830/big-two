@@ -100,10 +100,11 @@ class Environment {
 
   private _createHand(id: string, label: string, position: THREE.Vector3,
                       color: string = 'black') {
-    const hand = new HandAvatar(position);
+    const hand = new HandAvatar(id, position);
     this._hands[id] = hand;
     const text = this.createText(label, hand.position.clone().setZ(hand.position.z - 1));
     text.style.color = color;
+    this.scene.add(hand);
     return hand;
   }
 

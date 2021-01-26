@@ -11,15 +11,6 @@ export class Table {
 
   id:string;
   io:Server;
-  colors:string[]=[];
-
-  started:boolean=false;
-  playerIndex:number=0;
-
-  // Game state
-  cardStack:string[]=[];
-  currentMulti:number=0;
-  passedInRow:number=0;
 
   private _game = new BigTwo();
 
@@ -34,7 +25,6 @@ export class Table {
   private _tokens: {[token: string]: Session} = {};
 
   constructor(io:Server, id?:string) {
-    this.colors = ['darkred', 'midnightblue', 'darkslategray', 'indigo']
     this.id = id ? id : uuidv4();
 
     // Create a room on the socket.io server 
