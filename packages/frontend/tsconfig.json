@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "target": "ES6",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "jsx": "react",
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "src/App.tsx", ],
+  "references": [
+    { "path" : "../common/tsconfig.json" }
+  ]
+}
