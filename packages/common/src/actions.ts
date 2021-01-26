@@ -21,8 +21,7 @@ export namespace GameAction {
   export namespace PlayCards {
     export interface Payload {
       id: string,
-      card: Card.Card,
-      multiplicity: number,
+      cards: Card.Card[],
     }
   }
   export class DrawCards implements GameAction {

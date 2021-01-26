@@ -40,8 +40,8 @@ export const Network: Network = {
       cb();
     })
 
-    this.socket.onAny((...args) => {
-      console.log('Received', args);
+    this.socket.onAny((header: string) => {
+      console.log('Received: ', header);
     })
   },
 

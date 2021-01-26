@@ -5,37 +5,62 @@ import { Network } from '../Network';
 import { ISimpleEvent, SimpleEventDispatcher } from 'strongly-typed-events';
 import Emitter from 'component-emitter';
 
-interface GameManager {
-  handZ: number,
+interface GameManager extends Emitter {
   stackHeight: number,
   environment: Environment, 
   started: boolean,
-  players: Array<any>,
 
   onGameAction: ISimpleEvent<GameAction.GameAction>;
-  _onGameAction: SimpleEventDispatcher<GameAction.GameAction>;
 
   initialize: (domEl: HTMLCanvasElement) => void;
-  play: (card: Card.Card) => void;
   setupPlayers(payload: Message.SessionsData.Payload): void;
+  sendGameAction(p: GameAction.GameAction): void;
 
+  _onGameAction: SimpleEventDispatcher<GameAction.GameAction>;
+  _localConnections: Set<string>;
   _handleGameAction(action: GameAction.GameAction): void;
+  _emitter: Emitter<GameAction.Type>
 
 }
 
-const Base: GameManager = {
+const GameManager: GameManager = {
 
-  // Configuration, TODO: move elsewhere
-  handZ: 3,
   stackHeight: 0,
 
   environment: null,
   started: false,
-  players: [],
+
   get onGameAction() {
     return this._onGameAction.asEvent();
   },
+
+  on(event: string, ...args: any[]) {
+    return this._emitter.on(event, ...args);
+  },
+  
+  once(event: string, listener: Function) {
+    return this._emitter.once(event, listener);
+  },
+
+  off(event: string, listener: Function) {
+    return this._emitter.off(event, listener);
+  },
+
+  emit(event: string, ...args: any[]) {
+    return this._emitter.emit(event, ...args);
+  },
+
+  hasListeners(event: string) {
+    return this._emitter.hasListeners(event);
+  },
+
+  listeners(event: string) {
+    return this._emitter.listeners(event);
+  },
+
   _onGameAction: new SimpleEventDispatcher<GameAction.GameAction>(),
+  _localConnections: new Set<string>(),
+  _emitter: new Emitter(),
 
   /** Initialize the environment */
   initialize(domEl: HTMLCanvasElement) {
@@ -45,34 +70,31 @@ const Base: GameManager = {
     this.environment = new Environment(domEl);
     Network.on(Message.Type.SessionsData, (payload) => this.setupPlayers(payload));
     Network.on(Message.Type.GameAction, (action: GameAction.GameAction) => {
-      // Forward the game event
-      console.log(action);
-      console.log(action.type);
-      console.log(this.hasListeners(action.type))
+      console.log('Processing Action:', action.type);
+      console.log('listeners: ', this.listeners(action.type));
       this.emit(action.type, action.payload);
     });
   },
 
-  play(card: Card.Card) {
-    console.log('I\'m playing', card);
-    const action = new GameAction.PlayCards({
-      card: card,
-      multiplicity: 1,
-    });
-    this.stackHeight++;
+  setupPlayers(this: GameManager, payload: Message.SessionsData.Payload) {
+    // Add any new players
+    payload.sessions.forEach(sessionData => {
+      if (!this._localConnections.has(sessionData.id)) {
+        this._localConnections.add(sessionData.id);
+      }
+      this.environment.updatePlayer(sessionData);
+    })
   },
 
-  setupPlayers(this: GameManager, payload: Message.SessionsData.Payload) {
-    this.players = payload.sessions;
-    this.environment.updatePlayers(payload);
+  sendGameAction(p: GameAction.GameAction) {
+    const message = new Message.ActionMessage(p);
+    Network.send(message);
   },
 
   _handleGameAction(p: GameAction.GameAction) {
     this.emit(p.type, p.payload);
   }
 };
-
-const GameManager = Emitter(Base) as GameManager & Emitter<GameAction.Type>;
 
 export { GameManager };
 

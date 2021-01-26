@@ -4,7 +4,9 @@
   "devDependencies": {
     "lerna": "^3.22.1"
   },
-  "dependencies": {
-    "component-emitter": "^1.3.0"
-  }
+  "scripts": {
+    "build": "lerna run build",
+    "serve": "lerna run start"
+  },
+  "dependencies": {}
 }

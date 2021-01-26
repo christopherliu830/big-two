@@ -7,7 +7,8 @@ interface Vector2 {
 
 export interface MouseMoveEvent {
   event: MouseEvent,
-  position: Vector2;
+  x: number,
+  y: number,
 }
 
 interface InputHandler {
@@ -84,6 +85,6 @@ export const Input: InputHandler = {
       this.mousePosition.x = (event.clientX / w) * 2 - 1;
       this.mousePosition.y = -(event.clientY / h) * 2 + 1;
     }
-    this._onMouseMove.dispatch({event: event, position: this.mousePosition});
+    this._onMouseMove.dispatch({event: event, x: this.mousePosition.x, y: this.mousePosition.y});
   }
 }

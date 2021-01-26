@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 import { Input, MouseMoveEvent } from './Input';
-import { EventDispatcher, SignalDispatcher } from 'strongly-typed-events';
+import { EventDispatcher, SignalDispatcher, SimpleEventDispatcher } from 'strongly-typed-events';
 import { CardAvatar } from './Card';
 import { HandAvatar } from './Hand';
-import { Card, Message } from 'common';
+import { GameAction } from 'common';
 import { GameManager } from './GameManager';
 import { GameText } from './Text';
 
@@ -34,6 +34,11 @@ export interface RaycastHit {
   distance: number;
 }
 
+interface EnvironmentEvent {
+  event: MouseEvent;
+  hit: RaycastHit;
+}
+
 class Environment {
 
   static raycaster = new THREE.Raycaster();
@@ -45,14 +50,24 @@ class Environment {
   camera: THREE.PerspectiveCamera;
 
   static worldMouse:THREE.Vector3 = new THREE.Vector3();
-  private static _onMouseMove = new EventDispatcher<Environment, RaycastHit>();
-  private static _onStep = new SignalDispatcher();
-  private _intersects: THREE.Intersection[] = [];
-  private _hands: Record<string, HandAvatar> = {};
 
   static get onMouseMove() {
     return Environment._onMouseMove.asEvent();
   }
+  static get onMouseUp() {
+    return Environment._onMouseUp.asEvent();
+  }
+  static get onMouseDown() {
+    return Environment._onMouseDown.asEvent();
+  }
+
+  private static _onMouseMove = new SimpleEventDispatcher<EnvironmentEvent>();
+  private static _onMouseDown = new SimpleEventDispatcher<EnvironmentEvent>();
+  private static _onMouseUp = new SimpleEventDispatcher<EnvironmentEvent>();
+  private static _onStep = new SignalDispatcher();
+  private _intersects: THREE.Intersection[] = [];
+  private _players: Record<string, HandAvatar> = {};
+
 
   static get onStep() {
     return Environment._onStep.asEvent();
@@ -62,21 +77,28 @@ class Environment {
     window.onresize = () => this.onResize();
     this._initScene(el);
 
-    Input.onMouseMove.subscribe(event => this._handleMouseMove(event));
+    Input.onMouseMove.subscribe(this._handleMouseMove);
+    Input.onMouseDown.subscribe(this._handleMouseDown);
+    Input.onMouseUp.subscribe(this._handleMouseUp);
+    GameManager.on(GameAction.Type.DrawCards, this._handleAddCards);
   }
 
-  updatePlayers(players: Message.SessionsData.Payload) {
-
-    let count = 0;
-    players.sessions.forEach(player => {
-      const { me, id, name, color } = player;
-      if (me) {
-        this._createHand(id, name, config.playerPositions.me, color);
-      } else {
-        this._createHand(id, name, config.playerPositions.others[count++], color);
+  updatePlayer(player: { me: boolean, id: string, name: string, color?: string} ) {
+    const { me: isMe, id, name, color } = player;
+    if (!this._players[id]) {
+      if (isMe) {
+        this._createHand(id, name, config.playerPositions.me, isMe, color);
       }
-    })
-
+      else {
+        const len = Object.values(this._players).filter(p => !p.local).length;
+        if (len > 3) throw Error('> 3 peers not supported');
+        this._createHand(id, name, config.playerPositions.others[len], isMe, color);
+      }
+    }
+    else {
+      const c = this._players[id];
+      c.name = name;
+    }
   }
 
   createText(text: string, position: THREE.Vector3) {
@@ -98,29 +120,47 @@ class Environment {
     return vector;
   }
 
-  private _createHand(id: string, label: string, position: THREE.Vector3,
-                      color: string = 'black') {
-    const hand = new HandAvatar(id, position);
-    this._hands[id] = hand;
+  private _createHand = (id: string, label: string, position: THREE.Vector3,
+                         local: boolean, color: string = 'black') => {
+    const hand = new HandAvatar(id, position, local);
+    this._players[id] = hand;
     const text = this.createText(label, hand.position.clone().setZ(hand.position.z - 1));
     text.style.color = color;
     this.scene.add(hand);
     return hand;
   }
 
-  private _handleMouseMove(event: MouseMoveEvent) {
-    const mouse = event.position;
+  private _handleAddCards = (payload: GameAction.DrawCards.Payload) => {
+    const { cards } = payload;
+    const local = this._players[payload.id].local;
+    this._players[payload.id].addCard(...cards.map(({suit, value}) => {
+      const c = CardAvatar.Create(suit, value);
+      if (!local) c.disableInteraction();
+      return c;
+    }));
+  }
+
+  private _handleMouseMove = (event: MouseMoveEvent) => {
+    const mouse = { x: event.x, y: event.y} ;
     Environment.raycaster.setFromCamera(mouse, this.camera);
 
     this._intersects.length = 0;
     Environment.raycaster.intersectObjects(this.scene.children, false, this._intersects);
     if (this._intersects.length > 0) {
       Environment.worldMouse = this._intersects[0].point;
-      Environment._onMouseMove.dispatch(this, this._intersects[0]);
+      Environment._onMouseMove.dispatch({event: event.event, hit: this._intersects[0]});
     }
   }
 
-  private _initScene(el:HTMLCanvasElement) {
+  private _handleMouseDown = (event: MouseEvent) => {
+    Environment._onMouseDown.dispatch({event: event, hit: this._intersects[0]});
+  }
+
+  private _handleMouseUp = (event: MouseEvent) => {
+    Environment._onMouseUp.dispatch({event: event, hit: this._intersects[0]});
+  }
+
+  private _initScene = (el:HTMLCanvasElement) => {
     if (!this.renderer) {
       this.renderer = new THREE.WebGLRenderer({canvas: el});
       this.renderer.shadowMap.enabled = true;
@@ -162,7 +202,7 @@ class Environment {
     requestAnimationFrame(() => this.animate());
   }
 
-  onResize() {
+  onResize = () => {
     const width = this.renderer.domElement.clientWidth;
     const height = this.renderer.domElement.clientHeight;
 
@@ -172,8 +212,8 @@ class Environment {
     this.camera.updateProjectionMatrix();
   }
 
-  animate(time?:number) {
-    requestAnimationFrame(() => this.animate());
+  animate = (time?:number) => {
+    requestAnimationFrame(this.animate);
     TWEEN.update(time);
     this.composer.render();
     Environment._onStep.dispatch();

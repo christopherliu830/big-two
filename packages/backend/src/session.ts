@@ -3,7 +3,7 @@ import { Socket } from "socket.io";
 import { Table } from "./manager";
 import { v4 as uuid } from 'uuid';
 import Player from "./player";
-import { EventDispatcher } from 'strongly-typed-events';
+import { EventDispatcher, SignalDispatcher, SimpleEventDispatcher } from 'strongly-typed-events';
 
 /**
  * Use a session to associate a connected client to a socket.
@@ -21,6 +21,10 @@ export class Session {
   get onGameAction() {
     return this._onGameAction.asEvent();
   }
+  _onReconnect = new SignalDispatcher();
+  get onConnect() {
+    return this._onReconnect.asEvent();
+  }
 
   get connected() {
     return this._socket.connected;
@@ -37,7 +41,11 @@ export class Session {
       console.log(this.name, ': reusing socket');
       return;
     }
+
     this._socket = socket;
+
+    // If we're replacing the socket, it means a reconnect
+    if (this._socket) this._onReconnect.dispatch();
 
     // Subscribe to events here
     this._socket.onAny((...args) => console.log(this.name, JSON.stringify(args), '\n'));
@@ -124,12 +132,10 @@ export class FakeSession extends Session {
     super(null, table, config);
   }
 
-  setSocket() {
-    // Do nothing...
-  }
+  setSocket() { }
 
-  sendSessionsData(sessions: Session[]) {
-    // do nothing!
-  }
+  sendSessionsData(sessions: Session[]) { }
+
+  sendGameAction() { }
 
 }
