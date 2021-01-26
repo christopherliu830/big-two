@@ -1,13 +1,19 @@
 import { Table } from '../manager';
 import { Session } from '../session';
+import { Card } from 'common';
 
-class BigTwo {
+export class BigTwo {
 
-  start(table: Table) {
-    table.sessions.
+  start(sessions: Session[]) {
+    sessions.forEach(session => session.sendSessionsData(sessions));
+    console.log(Card.deck());
   }
 
   handleInput() {
+
+  }
+
+  beginTrick() {
 
   }
 

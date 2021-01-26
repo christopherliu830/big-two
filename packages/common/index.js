@@ -32,5 +32,15 @@ var Card;
         Value[Value["Ace"] = 11] = "Ace";
         Value[Value["Two"] = 12] = "Two";
     })(Value = Card.Value || (Card.Value = {}));
+    function deck() {
+        var deck = [];
+        for (var value in Value) {
+            for (var suit in Suit) {
+                deck.push({ value: value, suit: suit });
+            }
+        }
+        return deck;
+    }
+    Card.deck = deck;
 })(Card || (Card = {}));
 exports.Card = Card;

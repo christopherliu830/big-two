@@ -32,6 +32,16 @@ namespace Card {
     value: Value;
   }
 
+  export function deck(): Card[] {
+    const deck = [];
+    for(let value in Value) {
+      for(let suit in Suit) {
+        deck.push({value, suit})
+      }
+    }
+    return deck;
+  }
+
 }
 
 

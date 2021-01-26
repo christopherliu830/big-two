@@ -67,6 +67,7 @@ export declare namespace Message {
     namespace SessionsData {
         interface Payload {
             sessions: {
+                id: string;
                 name: string;
                 color?: string;
                 score?: number;

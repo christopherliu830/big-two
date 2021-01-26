@@ -3,7 +3,6 @@ import { Socket } from "socket.io";
 import { Table } from "./manager";
 import { v4 as uuid } from 'uuid';
 import Player from "./player";
-import { updateQualifiedName } from "typescript";
 
 /**
  * Use a session to associate a connected client to a socket.
@@ -21,7 +20,7 @@ export class Session {
     return this._socket.connected;
   }
 
-  get socket() {
+  get socket() : Socket | null {
     return this._socket;
   }
 
@@ -32,23 +31,22 @@ export class Session {
       console.log(this.name, ': reusing socket');
       return;
     }
-
     this._socket = socket;
 
     // Subscribe to events here
-    this.socket.onAny((...args) => console.log(this.name, JSON.stringify(args), '\n'));
-    this.socket.on(Message.Type.ClientChat, (p) => this._handleIncomingChat(p));
-    this.socket.on(Message.Type.Disconnect, (reason:string) => this.onDisconnect(socket, reason));
+    this._socket.onAny((...args) => console.log(this.name, JSON.stringify(args), '\n'));
+    this._socket.on(Message.Type.ClientChat, (p) => this._handleIncomingChat(p));
+    this._socket.on(Message.Type.Disconnect, (reason:string) => this.onDisconnect(socket, reason));
   }
 
-  constructor(socket: Socket, table: Table, config: Message.Join.Payload) {
+  constructor(socket: Socket | null, table: Table, config: Message.Join.Payload) {
     const { id, name, color } = config;
 
     this.id = id;
     this.name = name;
     this.color = color;
     this.table = table;
-    this.setSocket(socket);
+    socket && this.setSocket(socket);
 
     this.player = new Player();
   }
@@ -72,7 +70,7 @@ export class Session {
         me: session.id === this.id
       }))
     });
-    this.socket.emit(sessionsData.header, sessionsData.payload);
+    this._socket.emit(sessionsData.header, sessionsData.payload);
   }
 
   /** 
@@ -95,8 +93,23 @@ export class Session {
 /**
  * A fake session for bots
  */
-class FakeSession extends Session {
+export class FakeSession extends Session {
+
+  get connected() {
+    return true;
+  }
+
+  constructor(table: Table, config: Message.Join.Payload) {
+    super(null, table, config);
+
+  }
+
   setSocket() {
     // Do nothing...
   }
+
+  sendSessionsData(sessions: Session[]) {
+    // do nothing!
+  }
+
 }

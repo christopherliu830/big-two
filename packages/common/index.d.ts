@@ -27,6 +27,7 @@ declare namespace Card {
         suit: Suit;
         value: Value;
     }
+    function deck(): Card[];
 }
 export { GameAction, Message, MessageBase, Card };
 /**

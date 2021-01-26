@@ -1,7 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from 'common';
-import { Session } from './session';
+import { Session, FakeSession } from './session';
+import { BigTwo } from './BigTwo/BigTwo';
 
 /**
  * Represents players and the socket object
@@ -19,6 +20,8 @@ export class Table {
   cardStack:string[]=[];
   currentMulti:number=0;
   passedInRow:number=0;
+
+  private _game = new BigTwo();
 
   get sessions() {
     return Object.values(this._tokens);
@@ -54,9 +57,23 @@ export class Table {
       session = new Session(socket, this, config);
       console.log(session.name, 'has connected');
       this._tokens[config.id] = session;
+      this.start();
     }
 
     this.updateRemoteSessions();
+  }
+
+  start() {
+    while (this.sessions.length < 4) {
+      const id = uuidv4();
+      const config: Message.Join.Payload = {
+        id: id,
+        name: 'Bot',
+        color: 'gray',
+      }
+      this._tokens[id] = new FakeSession(this, config);
+    }
+    this._game.start(this.sessions);
   }
 
   /**
