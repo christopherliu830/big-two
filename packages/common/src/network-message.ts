@@ -73,7 +73,7 @@ export namespace Message {
     header: Type = Type.SessionsData;
     payload: SessionsData.Payload;
 
-    constructor(payload: SessionsData) {
+    constructor(payload: SessionsData.Payload) {
       super();
       this.payload = payload;
     }
