@@ -180,7 +180,7 @@ export class HandAvatar extends THREE.Group {
         .easing(TWEEN.Easing.Bounce.InOut)
         .start()
       
-      this.cards[i].position.y = i * 0.01;
+      this.cards[i].position.y = i * 0.001;
     }
   }
 
