@@ -6,9 +6,15 @@ docs: https://docs.google.com/document/d/1VtRd1RcDZTOf3oDYGGAEI8VYlO_lFUfdOXEo1w
 ## running
 
 in root directory: 
+
   npx lerna bootstrap
+  
   npx lerna build
+
 in frontend:
+
   npm start
+  
 in backend:
+
   npm start
