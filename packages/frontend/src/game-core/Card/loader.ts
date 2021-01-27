@@ -19,7 +19,7 @@ export const load = (suit: Card.Suit, value: Card.Value, backTexture?: number) =
   const frontTex = loadFront(suit, value);
   const backTex = loadBack(backTexture || 0);
 
-  const front = new MeshStandardMaterial({map: frontTex });
+  const front = new MeshStandardMaterial({map: frontTex || backTex });
   const back = new MeshStandardMaterial({map: backTex });
 
   const materials = [
@@ -34,9 +34,6 @@ export const load = (suit: Card.Suit, value: Card.Value, backTexture?: number) =
   return { geometry: geometry, material: materials };
 };
 
-/** 
- * Create an outline mesh for a given mesh. NOTE: This changes the render order of the mesh!
- */
 export const generateOutlineMesh = (mesh:THREE.Mesh, 
                                     color:number|string|Color='darkblue',
                                     thickness:number=0.05) => {
@@ -45,7 +42,7 @@ export const generateOutlineMesh = (mesh:THREE.Mesh,
 
   const outlineMesh = new Mesh(mesh.geometry, outlineMaterial);
   outlineMesh.scale.multiplyScalar(1 + thickness);
-  mesh.renderOrder = 1;
+  outlineMesh.renderOrder = mesh.renderOrder - 1;
   outlineMesh.visible = false;
   mesh.add(outlineMesh);
 
@@ -54,6 +51,8 @@ export const generateOutlineMesh = (mesh:THREE.Mesh,
 
 
 const loadFront = (suit: Card.Suit, value: Card.Value) => {
+
+  if (suit === Card.Suit.Hidden || value === Card.Value.Hidden) return null;
 
   let a = '';
   let b = '';

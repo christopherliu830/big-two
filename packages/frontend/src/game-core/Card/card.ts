@@ -15,9 +15,6 @@ export class CardAvatar extends Mesh implements Card.Card {
   value: Card.Value;
   parent: HandAvatar;
 
-  get interactable() {
-    return this._interactable;
-  }
 
   flipped: boolean;
 
@@ -26,7 +23,6 @@ export class CardAvatar extends Mesh implements Card.Card {
   }
   set selected(value) {
     value ? this._highlight() : this._lowlight();
-    this.parent?.select(this, value);
     this._selected = value;
   }
 
@@ -35,7 +31,6 @@ export class CardAvatar extends Mesh implements Card.Card {
   private _outlineMesh: THREE.Mesh;
   private _handlers: (() => void)[] = [];
   private _selected: boolean;
-  private _interactable: boolean;
 
   static Create(suit: Card.Suit, value: Card.Value, back: number = 0) {
     const { geometry, material } = load(suit, value, back);
@@ -45,41 +40,49 @@ export class CardAvatar extends Mesh implements Card.Card {
     c.value = value;
     c.name = `${Card.Suit[suit]}:${Card.Value[value]}`;
     c._outlineMesh = generateOutlineMesh(c);
-    c._handlers.push(Environment.onMouseDown.sub(c._onMouseDown));
+    c._handlers.push(Environment.onMouseMove.sub(c._onMouseMove.bind(c)));
+    c.castShadow = true;
+    c.receiveShadow = true;
 
     return c;
   }
 
   /** Disables card from being highlighted, removes its parents and removes all event listeners */
   disableInteraction() {
-    this._interactable = false;
     this._handlers.forEach(h => h());
     this._lowlight();
   }
 
-  private _onMouseDown = ({ event, hit }: {event: MouseEvent, hit: RaycastHit}) => {
-    switch(event.button) {
-      case 2:
-        if (hit.object === this) {
-          this.selected = !this.selected;
-        }
-        break;
+  enableInteraction() {
+    this._handlers.push(Environment.onMouseMove.sub(this._onMouseMove.bind(this)));
+  }
+
+  private _onMouseMove({hit }: {hit: RaycastHit}) {
+    if (hit.object === this) {
+      this._highlight();
+    }
+    else if (!this.selected) {
+      this._lowlight();
     }
   }
 
   private _highlight() {
+    this.receiveShadow = false;
     this._outlineMesh.visible = true;
     this._outlineMesh.renderOrder = 998;
     this.renderOrder = 999;
-    (this.material as THREE.Material[])[2].depthTest = false;
+    (this.material as THREE.Material[]).forEach(m => m.depthTest = false);
+    (this._outlineMesh.material as THREE.Material).depthTest = false;
   }
 
   private _lowlight() {
+    this.receiveShadow = true;
     this.targeted = false;
     this._outlineMesh.visible = false;
-    this._outlineMesh.renderOrder = 0;
-    this.renderOrder = 1;
-    (this.material as THREE.Material[])[2].depthTest = true;
+    this.renderOrder = 0;
+    this._outlineMesh.renderOrder = this.renderOrder - 1;
+    (this.material as THREE.Material[]).forEach(m => m.depthTest = true);
+    (this._outlineMesh.material as THREE.Material).depthTest = true;
   }
 }
 

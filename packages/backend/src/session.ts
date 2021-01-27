@@ -51,7 +51,7 @@ export class Session {
     this._socket.onAny((...args) => console.log(this.name, JSON.stringify(args), '\n'));
     this._socket.on(Message.Type.ClientChat, (p) => this._handleIncomingChat(p));
     this._socket.on(Message.Type.Disconnect, (reason:string) => this.onDisconnect(socket, reason));
-    this._socket.on(Message.Type.GameAction, (p) => this._handleIncomingGameAction(p));
+    this._socket.on(Message.Type.GameAction, this._handleIncomingGameAction.bind(this));
   }
 
   constructor(socket: Socket | null, table: Table, config: Message.Join.Payload) {
@@ -113,7 +113,8 @@ export class Session {
   /**
    * Unpack a game action and dispatch its event
    */
-  private _handleIncomingGameAction(payload: GameAction.GameAction) {
+  private _handleIncomingGameAction(payload: GameAction.GameAction, callback?: Function) {
+    payload.callback = callback;
     this._onGameAction.dispatch(this, payload);
   }
 

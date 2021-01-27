@@ -68,12 +68,8 @@ const GameManager: GameManager = {
     this.started = true;
     Input.initialize(domEl);
     this.environment = new Environment(domEl);
-    Network.on(Message.Type.SessionsData, (payload) => this.setupPlayers(payload));
-    Network.on(Message.Type.GameAction, (action: GameAction.GameAction) => {
-      console.log('Processing Action:', action.type);
-      console.log('listeners: ', this.listeners(action.type));
-      this.emit(action.type, action.payload);
-    });
+    Network.on(Message.Type.SessionsData, this.setupPlayers.bind(this));
+    Network.on(Message.Type.GameAction, this._handleGameAction.bind(this));
   },
 
   setupPlayers(this: GameManager, payload: Message.SessionsData.Payload) {
@@ -88,7 +84,7 @@ const GameManager: GameManager = {
 
   sendGameAction(p: GameAction.GameAction) {
     const message = new Message.ActionMessage(p);
-    Network.send(message);
+    Network.send(message, p.callback);
   },
 
   _handleGameAction(p: GameAction.GameAction) {

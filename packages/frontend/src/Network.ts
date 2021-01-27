@@ -9,7 +9,7 @@ interface Network {
   socket: Socket,
 
   connect(url: string, config: Message.Join , cb: () => void): void;
-  send(data: MessageBase): void;
+  send(data: MessageBase, callback?: Function): void;
   on(action: Message.Type, handler: Handler): any;
   off(action: Message.Type, handler: Handler): void;
   close(): void;
@@ -45,9 +45,9 @@ export const Network: Network = {
     })
   },
 
-  send(this: Network, data) {
+  send(this: Network, data, callback?: Function) {
     console.log('sending', data);
-    this.socket.emit(data.header, data.payload);
+    this.socket.emit(data.header, data.payload, callback);
   },
 
   on(this: Network, action, handler) {

@@ -15,15 +15,28 @@ import { Vector3 } from 'three';
 
 const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let l: HTMLDivElement = document.createElement('div');
+const up = new THREE.Vector3(0, 1, 0);
 
 // TODO: Put this somewhere else
 const config = { 
   playerPositions: {
-    me: new THREE.Vector3(0, 0, 3),
+    me: {
+      position: new THREE.Vector3(0, 0, 2.5),
+      rotation: new THREE.Euler(0, 0, 0),
+    },
     others: [
-      new THREE.Vector3(-3, 0, 0),
-      new THREE.Vector3(0, 0, -3),
-      new THREE.Vector3(3, 0, 0),
+      {
+        position: new THREE.Vector3(-3, 0, 0),
+        rotation: new THREE.Euler(0, -Math.PI / 2, 0),
+      },
+      {
+        position: new THREE.Vector3(0, 0, -3),
+        rotation: new THREE.Euler(0, -Math.PI, 0),
+      },
+      {
+        position: new THREE.Vector3(3, 0, 0),
+        rotation: new THREE.Euler(0, Math.PI / 2, 0),
+      },
     ]
   }
 }
@@ -87,12 +100,12 @@ class Environment {
     const { me: isMe, id, name, color } = player;
     if (!this._players[id]) {
       if (isMe) {
-        this._createHand(id, name, config.playerPositions.me, isMe, color);
+        this._createHand(id, name, 0, isMe, color);
       }
       else {
         const len = Object.values(this._players).filter(p => !p.local).length;
         if (len > 3) throw Error('> 3 peers not supported');
-        this._createHand(id, name, config.playerPositions.others[len], isMe, color);
+        this._createHand(id, name, len, isMe, color);
       }
     }
     else {
@@ -120,9 +133,18 @@ class Environment {
     return vector;
   }
 
-  private _createHand = (id: string, label: string, position: THREE.Vector3,
+  private _createHand = (id: string, label: string, index: number,
                          local: boolean, color: string = 'black') => {
-    const hand = new HandAvatar(id, position, local);
+    const hand = new HandAvatar(id, local);
+    if (!local) {
+      hand.position.copy(config.playerPositions.others[index].position);
+      hand.rotation.copy(config.playerPositions.others[index].rotation);
+    }
+    else {
+      hand.rotation.copy(config.playerPositions.me.rotation);
+      hand.position.copy(config.playerPositions.me.position);
+    }
+
     this._players[id] = hand;
     const text = this.createText(label, hand.position.clone().setZ(hand.position.z - 1));
     text.style.color = color;
@@ -135,7 +157,6 @@ class Environment {
     const local = this._players[payload.id].local;
     this._players[payload.id].addCard(...cards.map(({suit, value}) => {
       const c = CardAvatar.Create(suit, value);
-      if (!local) c.disableInteraction();
       return c;
     }));
   }
@@ -161,19 +182,19 @@ class Environment {
   }
 
   private _initScene = (el:HTMLCanvasElement) => {
-    if (!this.renderer) {
-      this.renderer = new THREE.WebGLRenderer({canvas: el});
-      this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      this.renderer.setClearColor(0xa8caff);
-    }
+    this.renderer = new THREE.WebGLRenderer({canvas: el});
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.setClearColor(0xa8caff);
 
     this.scene = new THREE.Scene();
+
     this.camera = new THREE.PerspectiveCamera(75, 999, 0.1, 1000);
     this.camera.position.set(0, 5, 0);
     this.camera.lookAt(0, 0, 0);
+
     const light = new THREE.DirectionalLight(0xffffff, 0.5);
-    light.position.set(300, 2000, 1000);
+    light.position.set(300, 2000, -1000);
     light.castShadow = true;
     light.shadow.camera.top = 5;
     light.shadow.camera.bottom = -5;
@@ -184,13 +205,16 @@ class Environment {
     light.shadow.mapSize.set(2048, 2048);
     light.shadow.bias = 0.0000037;
     this.scene.add(light);
+
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(10, 10, 1, 1),
-      new THREE.MeshBasicMaterial({color: 'gray'}),
+      new THREE.MeshStandardMaterial({color: 'gray'}),
     );
     plane.rotation.x = -Math.PI / 2;
+    plane.receiveShadow = true;
+    plane.position.y = -0.1;
 
     this.scene.add(plane);
 

@@ -1,6 +1,7 @@
 export namespace Card {
 
   export enum Suit {
+    Hidden = -1,
     Diamond = 0,
     Club = 1,
     Heart = 2,
@@ -8,6 +9,7 @@ export namespace Card {
   }
 
   export enum Value {
+    Hidden = -1,
     Three = 0,
     Four = 1,
     Five = 2,
@@ -28,11 +30,19 @@ export namespace Card {
     value: Value;
   }
 
+  export function shuffle(cards: Card[]) {
+    // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+    for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+  }
+
   export function deck(): Card[] {
     const deck = [];
-    for(let value in Value) {
-      for(let suit in Suit) {
-        deck.push({value, suit})
+    for(let suit = 0; suit < 4; suit++) {
+      for(let value = 0; value < 13; value++) {
+        deck.push({value, suit});
       }
     }
     return deck;

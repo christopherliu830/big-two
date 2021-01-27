@@ -16,18 +16,24 @@ export class BigTwo {
 
   start(sessions: Session[]) {
     this._sessions = sessions;
+    const deck = Card.deck();
+    Card.shuffle(deck);
+
+
     sessions.forEach(session => {
-      session.sendSessionsData(sessions)
-      const card: Card.Card = {
-        suit: Card.Suit.Diamond,
-        value: Math.floor(Math.random() * 13),
-      };
-      const action = new GameAction.DrawCards({id: session.id, cards: [card]});
+
+      session.sendSessionsData(sessions);
+
+      const action = new GameAction.DrawCards({id: session.id, cards: deck.splice(0, 13)});
       this._history.push(action);
-      session.sendGameAction(action);
-      session.onGameAction.sub((s, m) => this._update(s, m));
+      sessions.forEach(s => {
+        this._sendFiltered(s, action);
+      })
+
+      session.onGameAction.sub(this._update.bind(this));
       session.onConnect.sub(() => this.resendHistory(session));
     });
+
   }
 
   /**
@@ -36,13 +42,36 @@ export class BigTwo {
    */
   resendHistory(session: Session) {
     session.sendSessionsData(this._sessions);
-    this._history.forEach(action => {
+    this._history.forEach(action => this._sendFiltered(session, action));
+  }
+
+  private _sendFiltered = (session: Session, action: GameAction.GameAction) => {
+    if (session.id === action.payload.id) {
       session.sendGameAction(action);
-    })
+    } else {
+      session.sendGameAction(action.filter());
+    }
   }
 
   private _update(sender: Session, action: GameAction.GameAction) { 
+    if (this._sessions.indexOf(sender) != this.turnIndex) {
+      window.setTimeout(() => {
+        console.log(action.callback);
+        action.callback && action.callback(false);
+      }, 1000 );
+      return;
+    }
 
+    switch(action.type) {
+      case GameAction.Type.PlayCards:
+        this._handlePlayCards(action as GameAction.GameAction);
+        return;
+    }
+
+  }
+
+  private _handlePlayCards(action: GameAction.GameAction) {
+    action.callback && setTimeout(action.callback, 1000, false);
   }
 
   handleInput() {
