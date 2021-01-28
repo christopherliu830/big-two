@@ -58,6 +58,7 @@ export class Table {
         id: id,
         name: 'Bot',
         color: 'gray',
+        table: this.id,
       };
       this._tokens[id] = new FakeSession(this, config);
     }

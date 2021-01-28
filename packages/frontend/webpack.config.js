@@ -34,6 +34,9 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '',
   },  
+  devServer: {
+    historyApiFallback: true,
+  },
   plugins: [
     new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({

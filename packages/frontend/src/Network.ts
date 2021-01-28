@@ -25,7 +25,7 @@ export const Network: Network = {
 
   connect(this: Network, url, config, cb) {
     console.log('connecting to ', url);
-    this.socket = io(url);
+    if (!this.socket) this.socket = io(url);
     this.socket.connect();
 
     this._queuedHandlers.forEach(({ action, handler }) => {
@@ -40,6 +40,7 @@ export const Network: Network = {
 
     this.socket.onAny((header: string) => {
       console.log('Received: ', header);
+      console.log('I have handlers?: ', this.socket.listeners(header));
     });
   },
 
@@ -49,6 +50,7 @@ export const Network: Network = {
   },
 
   on(this: Network, action, handler) {
+    console.log('on', action, handler);
     if (!this.socket) return this._queuedHandlers.push({ action, handler });
     return this.socket.on(action, handler);
   },
@@ -58,6 +60,8 @@ export const Network: Network = {
   },
 
   close(this: Network) {
+    console.log('closing');
+    this.socket.offAny();
     this.socket.close();
   },
 };

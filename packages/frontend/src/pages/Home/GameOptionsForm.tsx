@@ -1,20 +1,16 @@
 import {
   Box,
   Button,
-  ButtonGroup,
   Checkbox,
   createStyles,
   FormControl,
   FormControlLabel,
-  FormGroup,
-  FormHelperText,
-  InputLabel,
   makeStyles,
   MenuItem,
   Select,
-  TextField,
   Theme,
 } from '@material-ui/core';
+import { useHistory } from 'react-router-dom';
 import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
 
 import React from 'react';
@@ -61,6 +57,8 @@ const useStyles = makeStyles((theme: Theme) =>
 export const GameOptionsForm: React.FC<Props> = ({ className }) => {
   const [winCondition, setWinCondition] = React.useState('rounds');
   const [rounds, setRounds] = React.useState(1);
+  const [hidden, setHidden] = React.useState(true);
+  const history = useHistory();
   const classes = useStyles();
 
   const selectChoices = () =>
@@ -75,9 +73,31 @@ export const GameOptionsForm: React.FC<Props> = ({ className }) => {
     setRounds(event.target.value as number);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleCheck = () => {
+    setHidden(!hidden);
+  };
+
   const handleFormSubmit = () => {
-    // fetch()
-  }
+    const options: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rounds,
+        winCondition,
+        hidden,
+      }),
+    };
+    fetch('http://localhost:3000/create-room', options)
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        history.push(`/${data.table}`);
+      });
+  };
 
   return (
     <Box
@@ -121,10 +141,12 @@ export const GameOptionsForm: React.FC<Props> = ({ className }) => {
         </div>
         <FormControlLabel
           className={classes.formControl}
-          control={<Checkbox />}
-          label="Private?"
+          control={<Checkbox checked={!hidden} onChange={handleCheck} />}
+          label="Public?"
         />
-        <Button className={classes.primary} onClick={handleFormSubmit}>Create</Button>
+        <Button className={classes.primary} onClick={handleFormSubmit}>
+          Create
+        </Button>
       </form>
     </Box>
   );

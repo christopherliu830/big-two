@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@material-ui/core';
+import { ThemeProvider } from '@material-ui/core';
 import { Game } from './pages/Game';
 import { Home } from './pages/Home';
 import { theme } from './theme';
@@ -14,7 +14,7 @@ export const App: React.FC = () => {
           <Route exact path="/">
             <Home />
           </Route>
-          <Route path="/game/:id">
+          <Route path="/:table">
             <Game />
           </Route>
         </Switch>

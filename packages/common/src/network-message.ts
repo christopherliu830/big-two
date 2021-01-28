@@ -30,6 +30,7 @@ export namespace Message {
   export namespace Join {
     export interface Payload {
       id: string;
+      table: string;
       name: string;
       color: string;
     }

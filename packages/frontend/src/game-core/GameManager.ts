@@ -4,6 +4,7 @@ import Emitter from 'component-emitter';
 import Environment from './Environment';
 import { Input } from './Input';
 import { Network } from '../Network';
+import { WebGLRenderer} from 'three';
 
 interface GameManager extends Emitter {
   stackHeight: number;
@@ -13,6 +14,7 @@ interface GameManager extends Emitter {
   onGameAction: ISimpleEvent<GameAction.GameAction>;
 
   initialize: (domEl: HTMLCanvasElement) => void;
+  close: () => void;
   setupPlayers(payload: Message.SessionsData.Payload): void;
   sendGameAction(p: GameAction.GameAction): void;
 
@@ -62,15 +64,30 @@ const GameManager: GameManager = {
 
   /** Initialize the environment */
   initialize(domEl: HTMLCanvasElement) {
-    if (this.started) return console.error('Manager already initialized!');
+    if (this.started) { // Recover our stuff
+      this.environment = new Environment(domEl);
+      return;
+    };
+
     this.started = true;
     Input.initialize(domEl);
     this.environment = new Environment(domEl);
-    Network.on(Message.Type.SessionsData, this.setupPlayers.bind(this));
-    Network.on(Message.Type.GameAction, this._handleGameAction.bind(this));
+
+    const onSessionsData = this.setupPlayers.bind(this);
+    const onGameAction = this._handleGameAction.bind(this);
+
+    Network.on(Message.Type.SessionsData, onSessionsData);
+    Network.on(Message.Type.GameAction, onGameAction);
+
+    this.close = () => {
+      // Network.off(Message.Type.SessionsData, onSessionsData);
+      // Network.off(Message.Type.GameAction, onGameAction);
+    }
   },
 
-  setupPlayers(this: GameManager, payload: Message.SessionsData.Payload) {
+  close() { /* Nothing? */ },
+
+  setupPlayers(payload: Message.SessionsData.Payload) {
     // Add any new players
     payload.sessions.forEach((sessionData) => {
       if (!this._localConnections.has(sessionData.id)) {
