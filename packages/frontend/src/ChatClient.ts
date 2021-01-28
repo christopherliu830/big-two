@@ -1,10 +1,9 @@
 import { Message } from 'common';
-import { Network } from './Network';
 import { SimpleEventDispatcher, ISimpleEvent } from 'strongly-typed-events';
+import { Network } from './Network';
 
 interface IChatClient {
-
-  // onMessage: 
+  // onMessage:
   onMessage: ISimpleEvent<Message.Chat.Payload>;
   _onMessage: SimpleEventDispatcher<Message.Chat.Payload>;
 
@@ -15,21 +14,18 @@ interface IChatClient {
 }
 
 const ChatClient: IChatClient = {
-
   _onMessage: new SimpleEventDispatcher<Message.Chat.Payload>(),
   get onMessage() {
     return this._onMessage.asEvent();
   },
 
-  initialize(this: IChatClient) {
-  },
+  initialize(this: IChatClient) {},
 
   send(this: IChatClient, message) {
     console.log('sending message', message);
-    const m = new Message.FromClientChat({ message: message });
+    const m = new Message.FromClientChat({ message });
     Network.send(m);
-  }
-
-}
+  },
+};
 
 export { ChatClient };

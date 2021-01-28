@@ -9,14 +9,17 @@ const style = `
 `;
 
 export class GameText {
-
   /**
    * Creates absolutely positioned text.
-   * @param text 
-   * @param position The position as a percentage from left, top on root 
+   * @param text
+   * @param position The position as a percentage from left, top on root
    * @param root Containing element.
    */
-  static Create(text: string, position: { x: number, y: number }, root: HTMLElement) {
+  static Create(
+    text: string,
+    position: { x: number; y: number },
+    root: HTMLElement
+  ) {
     const el = document.createElement('div');
     el.innerHTML = text;
     el.style.cssText = style;
@@ -25,5 +28,4 @@ export class GameText {
     el.style.top = `${position.y * 100}%`;
     return el;
   }
-
 }

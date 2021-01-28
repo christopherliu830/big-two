@@ -1,4 +1,4 @@
 {
-  "backendHost" : "ws://localhost:3000",
-  "entryPoint" : "root"
+  "backendHost": "ws://localhost:3000",
+  "entryPoint": "root"
 }

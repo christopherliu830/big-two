@@ -1,44 +1,43 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { ChatClient } from '../ChatClient';
 import { Message } from 'common';
+import { ChatClient } from '../ChatClient';
 import './Chat.css';
 import { Network } from '../Network';
 
-export const Chat:React.FunctionComponent = (props) => {
-
-  const [ messages, setMessages] = useState<Message.Chat.Payload[]>([]);
-  const [ text, setText ] = useState('');
+export const Chat: React.FunctionComponent = (props) => {
+  const [messages, setMessages] = useState<Message.Chat.Payload[]>([]);
+  const [text, setText] = useState('');
 
   useEffect(() => {
-    Network.on(Message.Type.ServerChat, (data: Message.Chat.Payload) => handleMessage(data));
-  }, [])
+    Network.on(Message.Type.ServerChat, (data: Message.Chat.Payload) =>
+      handleMessage(data)
+    );
+  }, []);
 
   const handleMessage = (message: Message.Chat.Payload) => {
-    setMessages(messages => {
+    setMessages((messages) => {
       if (messages.length > 20) {
         return [...messages.slice(1), message];
-      } else {
-        return [...messages, message];
       }
+      return [...messages, message];
     });
-  }
+  };
 
-  const handleSubmit = (e:React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text !== '') {
-      Network.send(new Message.FromClientChat({message: text}));
+      Network.send(new Message.FromClientChat({ message: text }));
       setText('');
     }
-  }
+  };
 
-  const handleInputChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
-  }
+  };
 
   return (
     <div className="chat">
-
       <div className="chat-button">
         <span>chat</span>
       </div>
@@ -46,42 +45,37 @@ export const Chat:React.FunctionComponent = (props) => {
       <div className="chat-window-wrapper">
         <div className="chat-window">
           <div className="message-block">
-            <div className="message-header">
-              System
-            </div>
-            <div className="message">
-              Connecting...
-            </div>
+            <div className="message-header">System</div>
+            <div className="message">Connecting...</div>
           </div>
-          {
-            messages.map(m => {
-              const { key, sender, message, color } = m;
+          {messages.map((m) => {
+            const { key, sender, message, color } = m;
 
-              return (
-                <div className="message-block" key={key}>
-                  <div className="message-header" style={{color: color}}>
-                    <b>{sender}</b>
-                  </div>
-                  <div className="message">
-                    {message}
-                  </div>
+            return (
+              <div className="message-block" key={key}>
+                <div className="message-header" style={{ color }}>
+                  <b>{sender}</b>
                 </div>
-              )
-            })
-          }
+                <div className="message">{message}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <div className="chat-input">
         <form onSubmit={handleSubmit}>
-          <input type="text" value={text} placeholder="Send a message..." onChange={handleInputChange}></input>
+          <input
+            type="text"
+            value={text}
+            placeholder="Send a message..."
+            onChange={handleInputChange}
+          />
         </form>
       </div>
-
     </div>
-  )
-}
-
+  );
+};
 
 /*
   <div class="chat">

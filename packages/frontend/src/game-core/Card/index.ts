@@ -1,5 +1,3 @@
 import { CardAvatar } from './card';
 
-export {
-  CardAvatar,
-}
+export { CardAvatar };

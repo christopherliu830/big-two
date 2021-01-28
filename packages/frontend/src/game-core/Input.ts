@@ -1,19 +1,18 @@
 import { ISimpleEvent, SimpleEventDispatcher } from 'strongly-typed-events';
 
 interface Vector2 {
-  x: number,
-  y: number,
+  x: number;
+  y: number;
 }
 
 export interface MouseMoveEvent {
-  event: MouseEvent,
-  x: number,
-  y: number,
+  event: MouseEvent;
+  x: number;
+  y: number;
 }
 
 interface InputHandler {
-
-  initialize: (el:HTMLElement) => void;
+  initialize: (el: HTMLElement) => void;
 
   /** The mouse position in normalized DOM coordinates. */
   mousePosition: Vector2;
@@ -22,7 +21,7 @@ interface InputHandler {
   mouseDown: number;
 
   /** the DOM's mouse event */
-  onMouseDown: ISimpleEvent<MouseEvent>; 
+  onMouseDown: ISimpleEvent<MouseEvent>;
 
   /** the DOM's mouse event */
   onMouseUp: ISimpleEvent<MouseEvent>;
@@ -31,7 +30,7 @@ interface InputHandler {
   onMouseMove: ISimpleEvent<MouseMoveEvent>;
 
   _domEl: HTMLElement;
-  _onMouseDown: SimpleEventDispatcher<MouseEvent>; 
+  _onMouseDown: SimpleEventDispatcher<MouseEvent>;
   _onMouseUp: SimpleEventDispatcher<MouseEvent>;
   _onMouseMove: SimpleEventDispatcher<MouseMoveEvent>;
   _handleMouseMove: (event: MouseEvent) => void;
@@ -40,7 +39,6 @@ interface InputHandler {
 }
 
 export const Input: InputHandler = {
-
   mousePosition: { x: 0, y: 0 },
   mouseDown: -1,
 
@@ -55,10 +53,10 @@ export const Input: InputHandler = {
 
   initialize(el?: HTMLElement) {
     this._domEl = el;
-    let elOrWindow = el || window;
-    elOrWindow.onmousemove = event => this._handleMouseMove(event);
-    elOrWindow.onmousedown = event => this._handleMouseDown(event);
-    elOrWindow.onmouseup = event => this._handleMouseUp(event);
+    const elOrWindow = el || window;
+    elOrWindow.onmousemove = (event) => this._handleMouseMove(event);
+    elOrWindow.onmousedown = (event) => this._handleMouseDown(event);
+    elOrWindow.onmouseup = (event) => this._handleMouseUp(event);
     this.onMouseDown = this._onMouseDown.asEvent();
     this.onMouseMove = this._onMouseMove.asEvent();
     this.onMouseUp = this._onMouseUp.asEvent();
@@ -73,18 +71,21 @@ export const Input: InputHandler = {
     this.mouseDown = -1;
     this._onMouseUp.dispatch(event);
   },
-  
+
   _handleMouseMove(event: MouseEvent) {
     if (this._domEl) {
       const { clientWidth: w, clientHeight: h } = this._domEl;
       this.mousePosition.x = (event.offsetX / w) * 2 - 1;
       this.mousePosition.y = -(event.offsetY / h) * 2 + 1;
-    }
-    else {
+    } else {
       const { innerWidth: w, innerHeight: h } = window;
       this.mousePosition.x = (event.clientX / w) * 2 - 1;
       this.mousePosition.y = -(event.clientY / h) * 2 + 1;
     }
-    this._onMouseMove.dispatch({event: event, x: this.mousePosition.x, y: this.mousePosition.y});
-  }
-}
+    this._onMouseMove.dispatch({
+      event,
+      x: this.mousePosition.x,
+      y: this.mousePosition.y,
+    });
+  },
+};

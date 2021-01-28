@@ -22,12 +22,14 @@ header {
   flex: 1 1 100%;
 }
 
-.body, table {
+.body,
+table {
   margin: 0;
   padding: 0;
 }
 
-table, tr {
+table,
+tr {
   width: 100%;
 }
 

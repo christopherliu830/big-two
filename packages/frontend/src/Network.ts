@@ -1,22 +1,20 @@
 import { io, Socket } from 'socket.io-client';
 import { MessageBase, Message } from 'common';
-import { ISignal, SignalDispatcher } from'strongly-typed-events';
-
+import { ISignal, SignalDispatcher } from 'strongly-typed-events';
 
 type Handler = (...args: any[]) => void;
 
 interface Network {
-  socket: Socket,
+  socket: Socket;
 
-  connect(url: string, config: Message.Join , cb: () => void): void;
+  connect(url: string, config: Message.Join, cb: () => void): void;
   send(data: MessageBase, callback?: Function): void;
   on(action: Message.Type, handler: Handler): any;
   off(action: Message.Type, handler: Handler): void;
   close(): void;
 
-  _queuedHandlers: Array<{action: Message.Type, handler: Handler}>;
-
-};
+  _queuedHandlers: Array<{ action: Message.Type; handler: Handler }>;
+}
 
 /** A simple socket.io wrapper, restricting sent messages to
  *  Message.Type
@@ -30,7 +28,7 @@ export const Network: Network = {
     this.socket = io(url);
     this.socket.connect();
 
-    this._queuedHandlers.forEach(({action, handler}) => {
+    this._queuedHandlers.forEach(({ action, handler }) => {
       this.socket.on(action, handler);
     });
     this._queuedHandlers.length = 0;
@@ -38,11 +36,11 @@ export const Network: Network = {
     this.socket.on(Message.Type.Connect, () => {
       this.send(config);
       cb();
-    })
+    });
 
     this.socket.onAny((header: string) => {
       console.log('Received: ', header);
-    })
+    });
   },
 
   send(this: Network, data, callback?: Function) {
@@ -51,16 +49,15 @@ export const Network: Network = {
   },
 
   on(this: Network, action, handler) {
-    if (!this.socket) return this._queuedHandlers.push({action, handler});
+    if (!this.socket) return this._queuedHandlers.push({ action, handler });
     return this.socket.on(action, handler);
   },
-  
+
   off(this: Network, action, handler) {
     return this.socket.off(action, handler);
   },
 
   close(this: Network) {
     this.socket.close();
-  }
-
-}
+  },
+};

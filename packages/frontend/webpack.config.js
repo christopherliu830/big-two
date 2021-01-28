@@ -20,6 +20,10 @@ module.exports = {
         test: /.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|gltf|glb)$/i,
         type: 'asset/resource',
       },
+      {
+        test: /\.(woff|woff2|eot|ttf|svg)$/,
+        type: 'asset/resource',
+      }
     ],
   },
   resolve: {
@@ -28,15 +32,12 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    publicPath: '',
   },  
   plugins: [
     new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "src", "index.html")
     }),
-    new webpack.ProvidePlugin({
-      $: 'jquery',
-      jQuery: 'jquery',
-    })
   ],
 };

@@ -1,43 +1,45 @@
 import { Card } from 'common';
-import { 
-  BoxGeometry, 
-  Color, 
-  TextureLoader, 
-  MeshBasicMaterial, 
+import {
+  BoxGeometry,
+  Color,
+  TextureLoader,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   BackSide,
   Mesh,
 } from 'three';
 
 const loader = new TextureLoader();
-const blank = new MeshBasicMaterial({color: 0xf0f0f0});
-const geometry = new BoxGeometry(.64, .02, .89); // TODO: move this into a config file
+const blank = new MeshBasicMaterial({ color: 0xf0f0f0 });
+const geometry = new BoxGeometry(0.64, 0.02, 0.89); // TODO: move this into a config file
 geometry.computeBoundingBox();
 
 /** Loads a textured mesh with a given card suit, value, and optional back texture */
-export const load = (suit: Card.Suit, value: Card.Value, backTexture?: number) => {
+export const load = (
+  suit: Card.Suit,
+  value: Card.Value,
+  backTexture?: number
+) => {
   const frontTex = loadFront(suit, value);
   const backTex = loadBack(backTexture || 0);
 
-  const front = new MeshStandardMaterial({map: frontTex || backTex });
-  const back = new MeshStandardMaterial({map: backTex });
+  const front = new MeshStandardMaterial({ map: frontTex || backTex });
+  const back = new MeshStandardMaterial({ map: backTex });
 
-  const materials = [
-    blank,
-    blank,
-    front,
-    back,
-    blank,
-    blank,
-  ]
+  const materials = [blank, blank, front, back, blank, blank];
 
-  return { geometry: geometry, material: materials };
+  return { geometry, material: materials };
 };
 
-export const generateOutlineMesh = (mesh:THREE.Mesh, 
-                                    color:number|string|Color='darkblue',
-                                    thickness:number=0.05) => {
-  const outlineMaterial = new MeshBasicMaterial({color: color, side: BackSide});
+export const generateOutlineMesh = (
+  mesh: THREE.Mesh,
+  color: number | string | Color = 'darkblue',
+  thickness = 0.05
+) => {
+  const outlineMaterial = new MeshBasicMaterial({
+    color,
+    side: BackSide,
+  });
   outlineMaterial.depthTest = false;
 
   const outlineMesh = new Mesh(mesh.geometry, outlineMaterial);
@@ -47,18 +49,16 @@ export const generateOutlineMesh = (mesh:THREE.Mesh,
   mesh.add(outlineMesh);
 
   return outlineMesh;
-}
-
+};
 
 const loadFront = (suit: Card.Suit, value: Card.Value) => {
-
   if (suit === Card.Suit.Hidden || value === Card.Value.Hidden) return null;
 
   let a = '';
   let b = '';
   let c = '';
 
-  switch(suit) {
+  switch (suit) {
     case Card.Suit.Club:
       b = 'clubs';
       break;
@@ -73,7 +73,7 @@ const loadFront = (suit: Card.Suit, value: Card.Value) => {
       break;
   }
 
-  switch(value) {
+  switch (value) {
     case Card.Value.Ace:
       a = 'ace';
       break;
@@ -119,8 +119,8 @@ const loadFront = (suit: Card.Suit, value: Card.Value) => {
   }
 
   return loader.load(require(`./assets/${a}_of_${b}${c}.png`));
-}
+};
 
 const loadBack = (index: number) => {
-  return loader.load(require(`./assets/back${index + 1}.png`))
+  return loader.load(require(`./assets/back${index + 1}.png`));
 };

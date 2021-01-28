@@ -3,9 +3,4 @@ import { Message } from './network-message';
 import { MessageBase } from './message';
 import { Card } from './card';
 
-export { 
-  GameAction, 
-  Message, 
-  MessageBase, 
-  Card
-};
+export { GameAction, Message, MessageBase, Card };

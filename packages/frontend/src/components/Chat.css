@@ -19,7 +19,7 @@
   flex: 0 1 100%;
   height: 100%;
   background: #fcfdf9;
-  overflow:hidden;
+  overflow: hidden;
 }
 
 .chat-window {
@@ -34,14 +34,14 @@
 }
 
 .chat-input {
-  background:#fcfdf9;
+  background: #fcfdf9;
   padding: 10px 20px;
   font-size: 18px;
   padding: 10px;
 }
 
 input {
-  border:none;
+  border: none;
   padding: 5px 15px;
   width: 100%;
   background: #ecede9;

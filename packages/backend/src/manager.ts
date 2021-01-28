@@ -8,9 +8,8 @@ import { BigTwo } from './BigTwo/BigTwo';
  * Represents players and the socket object
  */
 export class Table {
-
-  id:string;
-  io:Server;
+  id: string;
+  io: Server;
 
   private _game = new BigTwo();
 
@@ -22,16 +21,16 @@ export class Table {
    * Associate a uuid token (the player id) to a session object.
    * Used in socket.on('connection'), don't use this anywhere else probably.
    */
-  private _tokens: {[token: string]: Session} = {};
+  private _tokens: { [token: string]: Session } = {};
 
-  constructor(io:Server, id?:string) {
+  constructor(io: Server, id?: string) {
     this.id = id ? id : uuidv4();
 
-    // Create a room on the socket.io server 
+    // Create a room on the socket.io server
     this.io = io.to(this.id);
   }
 
-  join(socket:Socket, config: Message.Join.Payload) {
+  join(socket: Socket, config: Message.Join.Payload) {
     const { id, name } = config;
     socket.join(this.id);
 
@@ -42,8 +41,7 @@ export class Table {
       session.name = config.name;
       session.color = config.color;
       session.setSocket(socket);
-    }
-    else {
+    } else {
       session = new Session(socket, this, config);
       console.log(session.name, 'has connected');
       this._tokens[config.id] = session;
@@ -60,7 +58,7 @@ export class Table {
         id: id,
         name: 'Bot',
         color: 'gray',
-      }
+      };
       this._tokens[id] = new FakeSession(this, config);
     }
     this._game.start(this.sessions);
@@ -71,6 +69,6 @@ export class Table {
    * Only broadcast connected sessions
    */
   updateRemoteSessions() {
-    this.sessions.forEach(session => session.sendSessionsData(this.sessions));
+    this.sessions.forEach((session) => session.sendSessionsData(this.sessions));
   }
 }

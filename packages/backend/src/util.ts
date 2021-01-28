@@ -1,7 +1,25 @@
-const suitOrder = [ 'DIAMOND', 'CLUB', 'HEART', 'SPADE' ]
-const numOrder = [ '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING', 'ACE', '2' ]
+const suitOrder = ['DIAMOND', 'CLUB', 'HEART', 'SPADE'];
+const numOrder = [
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '10',
+  'JACK',
+  'QUEEN',
+  'KING',
+  'ACE',
+  '2',
+];
 
-export function cardCompareTo(a:string, b:string, valueOnly:boolean=false) {
+export function cardCompareTo(
+  a: string,
+  b: string,
+  valueOnly: boolean = false
+) {
   const [as, an] = a.split('_');
   const [bs, bn] = b.split('_');
   const ias = suitOrder.indexOf(as);
@@ -22,7 +40,7 @@ export function cardCompareTo(a:string, b:string, valueOnly:boolean=false) {
   else return 0;
 }
 
-export function checkSameValue(cards:string[]) {
+export function checkSameValue(cards: string[]) {
   const value = cards[0].split('_')[1];
-  return cards.every(card => card.split('_')[1] === value);
+  return cards.every((card) => card.split('_')[1] === value);
 }

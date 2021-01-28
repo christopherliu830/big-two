@@ -1,14 +1,14 @@
-import Environment from './Environment';
-import { Input } from './Input';
 import { Card, Message, GameAction } from 'common';
-import { Network } from '../Network';
 import { ISimpleEvent, SimpleEventDispatcher } from 'strongly-typed-events';
 import Emitter from 'component-emitter';
+import Environment from './Environment';
+import { Input } from './Input';
+import { Network } from '../Network';
 
 interface GameManager extends Emitter {
-  stackHeight: number,
-  environment: Environment, 
-  started: boolean,
+  stackHeight: number;
+  environment: Environment;
+  started: boolean;
 
   onGameAction: ISimpleEvent<GameAction.GameAction>;
 
@@ -19,12 +19,10 @@ interface GameManager extends Emitter {
   _onGameAction: SimpleEventDispatcher<GameAction.GameAction>;
   _localConnections: Set<string>;
   _handleGameAction(action: GameAction.GameAction): void;
-  _emitter: Emitter<GameAction.Type>
-
+  _emitter: Emitter<GameAction.Type>;
 }
 
 const GameManager: GameManager = {
-
   stackHeight: 0,
 
   environment: null,
@@ -37,7 +35,7 @@ const GameManager: GameManager = {
   on(event: string, ...args: any[]) {
     return this._emitter.on(event, ...args);
   },
-  
+
   once(event: string, listener: Function) {
     return this._emitter.once(event, listener);
   },
@@ -74,12 +72,12 @@ const GameManager: GameManager = {
 
   setupPlayers(this: GameManager, payload: Message.SessionsData.Payload) {
     // Add any new players
-    payload.sessions.forEach(sessionData => {
+    payload.sessions.forEach((sessionData) => {
       if (!this._localConnections.has(sessionData.id)) {
         this._localConnections.add(sessionData.id);
       }
       this.environment.updatePlayer(sessionData);
-    })
+    });
   },
 
   sendGameAction(p: GameAction.GameAction) {
@@ -89,9 +87,7 @@ const GameManager: GameManager = {
 
   _handleGameAction(p: GameAction.GameAction) {
     this.emit(p.type, p.payload);
-  }
+  },
 };
 
 export { GameManager };
-
-

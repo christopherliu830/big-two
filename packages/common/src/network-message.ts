@@ -2,9 +2,7 @@ import { GameAction } from './actions';
 import { MessageBase } from './message';
 
 export namespace Message {
-
   export enum Type {
-
     // These three are special use for socket.io
     Connect = 'connect',
     Disconnect = 'disconnect',
@@ -18,9 +16,8 @@ export namespace Message {
     JoinAck = 'JOIN_ACK',
     PlayCards = 'PLAY_CARD',
     GameAction = 'GAME_ACTION',
-
   }
-  export interface MessagePayload {};
+  export interface MessagePayload {}
   export class Join extends MessageBase {
     header: Type = Type.Join;
     payload: Join.Payload;
@@ -49,10 +46,10 @@ export namespace Message {
   }
   export namespace Chat {
     export interface Payload {
-      key: string,
-      message: string,
-      color: string,
-      sender: string,
+      key: string;
+      message: string;
+      color: string;
+      sender: string;
     }
   }
   export class FromClientChat extends MessageBase {
@@ -81,12 +78,12 @@ export namespace Message {
   export namespace SessionsData {
     export interface Payload {
       sessions: {
-        id: string,
-        name: string,
-        color?: string,
-        score?: number,
-        me: boolean,
-      }[]
+        id: string;
+        name: string;
+        color?: string;
+        score?: number;
+        me: boolean;
+      }[];
     }
   }
   /** This is just the message wrapper for a GameAction */

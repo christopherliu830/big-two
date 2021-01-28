@@ -1,0 +1,12 @@
+{
+  "extends": ["airbnb-typescript-prettier"],
+  "parserOptions" : {
+    "project" : "tsconfig.json",
+    "tsconfigRootDir": "./",
+    "sourceType": "module"
+  },
+  "rules": {
+    "import/prefer-default-export": 0,
+    "import/no-default-export": "error"
+  }
+}

@@ -27,12 +27,11 @@ export namespace GameAction {
     }
 
     filter = () => this; // I don't know what to do here yet
-
   }
   export namespace PlayCards {
     export interface Payload {
-      id: string,
-      cards: Card.Card[],
+      id: string;
+      cards: Card.Card[];
     }
   }
 
@@ -43,26 +42,26 @@ export namespace GameAction {
   export class DrawCards implements GameAction {
     type = Type.DrawCards;
     payload: DrawCards.Payload;
-    
-    constructor(payload: DrawCards.Payload) { 
-      this.payload = payload 
-    };
+
+    constructor(payload: DrawCards.Payload) {
+      this.payload = payload;
+    }
 
     filter = () => {
       const copy = {
         id: this.payload.id,
-        cards: this.payload.cards.map(c => ({
+        cards: this.payload.cards.map((c) => ({
           suit: Card.Suit.Hidden,
           value: Card.Value.Hidden,
-        }))
+        })),
       };
       return new DrawCards(copy);
-    }
+    };
   }
   export namespace DrawCards {
     export interface Payload {
-      id: string,
-      cards: Card.Card[],
+      id: string;
+      cards: Card.Card[];
     }
   }
 }
