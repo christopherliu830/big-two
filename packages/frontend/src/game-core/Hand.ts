@@ -4,7 +4,6 @@ import { Card, GameAction } from 'common';
 import { CardAvatar } from './Card';
 import { InputOutput, RaycastHit } from './Input';
 import { CardStack } from './Stack';
-import { Quaternion, Vector3 } from 'three';
 
 const config = {
   spread: {
