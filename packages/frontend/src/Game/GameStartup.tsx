@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { Modal } from 'react-bootstrap';
+import { ColorPicker } from '../components/ColorPicker';
 
 interface GameStartupPrompt {
   onClose?: (arg0: string) => void;
   open: boolean;
 }
+
 
 export const GameStartupPrompt: React.FunctionComponent<GameStartupPrompt> = (
   props
@@ -37,6 +39,7 @@ export const GameStartupPrompt: React.FunctionComponent<GameStartupPrompt> = (
               onChange={handleChange}
             />
           </form>
+          <ColorPicker />
         </Modal.Body>
       </Modal>
     </>

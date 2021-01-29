@@ -1,11 +1,4 @@
 import Emitter from 'component-emitter';
-import { Connection } from '../Network';
-
-export enum Input {
-  Select = 'SELECT',
-  Unselect = 'UNSELECT',
-
-}
 
 export class TypedEmitter<T extends string> implements Emitter<T> {
   private _emitter: Emitter<T> = new Emitter();
