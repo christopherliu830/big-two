@@ -1,24 +1,26 @@
 import { Card } from './card';
+import { Message } from './message';
 
 export namespace GameAction {
-  export enum Type {
-    PlayCards = 'PLAY_CARDS',
-    Pass = 'PASS',
-    DrawCards = 'DRAW_CARDS',
-  }
-  export interface GameAction {
-    type: GameAction.Type;
-    payload: { id: string };
-    callback?: Function;
 
+  export interface GameAction extends Message.Base {
+    header: Message.Type;
+    payload: GameAction.Payload;
     /**
      * If the player is getting someone else's action,
      * filter the data and hide sensitive/hidden information.
      */
     filter: () => GameAction;
   }
+  export interface Payload extends Message.Payload {
+    /**
+     * Player uuid of the person doing the action.
+     */
+    id: string;
+  }
+
   export class PlayCards implements GameAction {
-    type = Type.PlayCards;
+    header = PlayCards.Type;
     payload: PlayCards.Payload;
     callback?: Function;
 
@@ -26,10 +28,11 @@ export namespace GameAction {
       this.payload = action;
     }
 
-    filter = () => this; // I don't know what to do here yet
+    filter = () => this;
   }
   export namespace PlayCards {
-    export interface Payload {
+    export const Type = Message.Type.PlayCards;
+    export interface Payload extends GameAction.Payload {
       id: string;
       cards: Card.Card[];
     }
@@ -40,7 +43,7 @@ export namespace GameAction {
    * environment locally.
    */
   export class DrawCards implements GameAction {
-    type = Type.DrawCards;
+    header = DrawCards.Type;
     payload: DrawCards.Payload;
 
     constructor(payload: DrawCards.Payload) {
@@ -59,8 +62,8 @@ export namespace GameAction {
     };
   }
   export namespace DrawCards {
-    export interface Payload {
-      id: string;
+    export const Type = Message.Type.DrawCards;
+    export interface Payload extends GameAction.Payload {
       cards: Card.Card[];
     }
   }

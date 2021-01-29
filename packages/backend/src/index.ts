@@ -1,8 +1,7 @@
 import { Socket } from 'socket.io';
 import { Table } from './manager';
-import { Message } from 'common';
+import { NetworkMessage as Message } from 'common';
 import { Request, Response } from 'express';
-import * as crypto from 'crypto';
 
 const cors = require('cors');
 const express = require('express');
@@ -42,7 +41,7 @@ io.on(Message.Type.Connect, (socket: Socket) => {
 
   socket.on(Message.Type.Join, (payload: Message.Join.Payload) => {
     const id = payload.table;
-    tables[id].join(socket, payload);
+    tables[id]?.join(socket, payload);
   });
 });
 

@@ -1,33 +1,19 @@
 import { GameAction } from './actions';
-import { MessageBase } from './message';
+import { Message } from './message';
 
-export namespace Message {
-  export enum Type {
-    // These three are special use for socket.io
-    Connect = 'connect',
-    Disconnect = 'disconnect',
-    ConnectError = 'connect_error',
+export namespace NetworkMessage {
 
-    // These are not
-    ServerChat = 'CHAT',
-    ClientChat = 'CLIENT_CHAT',
-    SessionsData = 'SESSIONS_DATA',
-    Join = 'JOIN',
-    JoinAck = 'JOIN_ACK',
-    PlayCards = 'PLAY_CARD',
-    GameAction = 'GAME_ACTION',
-  }
-  export interface MessagePayload {}
-  export class Join extends MessageBase {
-    header: Type = Type.Join;
+  export const Type = Message.Type;
+
+  /**
+   * Request to join a table message.
+   */
+  export class Join extends Message.Base {
+    header = Join.Header;
     payload: Join.Payload;
-
-    constructor(payload: Join.Payload) {
-      super();
-      this.payload = payload;
-    }
   }
   export namespace Join {
+    export const Header = Message.Type.Join;
     export interface Payload {
       id: string;
       table: string;
@@ -35,65 +21,67 @@ export namespace Message {
       color: string;
     }
   }
-  export class Chat extends MessageBase {
-    header: Type = Type.ServerChat;
 
+
+  /**
+   * Used by server to send a chat to a client.
+   */
+  export class Chat extends Message.Base {
+    header = Chat.Header;
     payload: Chat.Payload;
 
-    constructor(payload: Chat.Payload) {
-      super();
-      this.payload = payload;
-    }
+    constructor(payload: Chat.Payload) { super(payload) };
   }
   export namespace Chat {
+    export const Header = Message.Type.ServerChat;
     export interface Payload {
+      sender: string; // The name of the sender!
       key: string;
       message: string;
       color: string;
-      sender: string;
     }
   }
-  export class FromClientChat extends MessageBase {
-    header: Type = Type.ClientChat;
-    payload: FromClientChat.Payload;
 
-    constructor(payload: FromClientChat.Payload) {
-      super();
-      this.payload = payload;
-    }
+  /**
+   * Used by client to send a chat to server.
+   */
+  export class FromClientChat extends Message.Base {
+    header = FromClientChat.Header;
+    payload: FromClientChat.Payload;
   }
   export namespace FromClientChat {
+    export const Header = Message.Type.ClientChat;
     export interface Payload {
       message: string;
     }
   }
-  export class SessionsData extends MessageBase {
-    header: Type = Type.SessionsData;
-    payload: SessionsData.Payload;
 
-    constructor(payload: SessionsData.Payload) {
-      super();
-      this.payload = payload;
-    }
+  /**
+   * Server sends this to update the connected sessions.
+   */
+  export class SessionData extends Message.Base {
+    header = SessionData.Header;
+    payload: SessionData.Payload;
+
+    filter = () => {}
+
+    constructor(payload: SessionData.Payload) { super(payload); }
   }
-  export namespace SessionsData {
+  export namespace SessionData {
+    export const Header = Message.Type.SessionsData;
     export interface Payload {
-      sessions: {
-        id: string;
-        name: string;
-        color?: string;
-        score?: number;
-        me: boolean;
-      }[];
+      id: string;
+      name: string;
+      color?: string;
+      score?: number;
     }
   }
-  /** This is just the message wrapper for a GameAction */
-  export class ActionMessage {
-    header = Type.GameAction;
-    payload: GameAction.GameAction;
 
-    constructor(payload: GameAction.GameAction) {
-      this.payload = payload;
-    }
+  export class BroadcastData extends Message.Base {
+    header = Message.Type.BroadcastData
+    payload: {};
+  }
+  export namespace BroadcastData {
+    export interface Payload extends Message.Payload { }
   }
 }

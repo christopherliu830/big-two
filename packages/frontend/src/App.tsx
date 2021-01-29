@@ -8,7 +8,6 @@ import { theme } from './theme';
 export const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
-      {/* <CssBaseline /> */}
       <Router>
         <Switch>
           <Route exact path="/">

@@ -1,65 +1,79 @@
-import * as THREE from 'three';
-import * as TWEEN from '@tweenjs/tween.js';
-import { Mesh, Vector3 } from 'three';
+import { Mesh } from 'three';
 import { Card } from 'common';
-import Emitter from 'component-emitter';
 import { load, generateOutlineMesh } from './loader';
-import Environment, { RaycastHit } from '../Environment';
-import { Input } from '../Input';
-import { GameManager } from '../GameManager';
-import { HandAvatar } from '../Hand';
+import type { HandAvatar } from '../Hand';
+import { RaycastHit, InputOutput } from '../Input';
 
 export class CardAvatar extends Mesh implements Card.Card {
+
   suit: Card.Suit;
 
   value: Card.Value;
+
+  netId: string;
 
   parent: HandAvatar;
 
   flipped: boolean;
 
-  get selected() {
-    return this._selected;
-  }
-
-  set selected(value) {
-    value ? this._highlight() : this._lowlight();
-    this._selected = value;
-  }
-
-  targeted: boolean;
+  selected: boolean;
 
   private _outlineMesh: THREE.Mesh;
 
   private _handlers: (() => void)[] = [];
 
-  private _selected: boolean;
+  private _input: InputOutput;
 
-  static Create(suit: Card.Suit, value: Card.Value, back = 0) {
+  static Create(
+    input: InputOutput,
+    suit: Card.Suit,
+    value: Card.Value,
+    netId: string,
+    back = 0
+  ): CardAvatar {
     const { geometry, material } = load(suit, value, back);
     const c = new CardAvatar(geometry, material);
 
     c.suit = suit;
     c.value = value;
     c.name = `${Card.Suit[suit]}:${Card.Value[value]}`;
+    c.netId = netId;
+    c._input = input;
     c._outlineMesh = generateOutlineMesh(c);
-    c._handlers.push(Environment.onMouseMove.sub(c._onMouseMove.bind(c)));
+    c._handlers.push(input.onMouseMove.sub(c._onMouseMove.bind(c)));
     c.castShadow = true;
     c.receiveShadow = true;
 
     return c;
   }
 
+  select(value: boolean): void {
+    if (value) this._highlight();
+    else this._lowlight();
+    this.selected = value;
+  }
+
   /** Disables card from being highlighted, removes its parents and removes all event listeners */
-  disableInteraction() {
+  disableInteraction(): void {
     this._handlers.forEach((h) => h());
     this._lowlight();
   }
 
-  enableInteraction() {
+  enableInteraction(): void {
     this._handlers.push(
-      Environment.onMouseMove.sub(this._onMouseMove.bind(this))
+      this._input.onMouseMove.sub(this._onMouseMove.bind(this))
     );
+  }
+
+  /**
+   * Change the card's appearance to match the card.
+   */
+  switch(card: Card.Card) {
+    const { suit, value } = card;
+    const { geometry, material } = load(suit, value, 0);
+    this.material = material;
+    this.geometry = geometry;
+    this._outlineMesh = generateOutlineMesh(this);
   }
 
   private _onMouseMove({ hit }: { hit: RaycastHit }) {
@@ -75,34 +89,20 @@ export class CardAvatar extends Mesh implements Card.Card {
     this._outlineMesh.visible = true;
     this._outlineMesh.renderOrder = 998;
     this.renderOrder = 999;
-    (this.material as THREE.Material[]).forEach((m) => (m.depthTest = false));
+    (this.material as THREE.Material[]).forEach((m) => {
+      m.depthTest = false;
+    });
     (this._outlineMesh.material as THREE.Material).depthTest = false;
   }
 
   private _lowlight() {
     this.receiveShadow = true;
-    this.targeted = false;
     this._outlineMesh.visible = false;
     this.renderOrder = 0;
     this._outlineMesh.renderOrder = this.renderOrder - 1;
-    (this.material as THREE.Material[]).forEach((m) => (m.depthTest = true));
+    (this.material as THREE.Material[]).forEach((m) => {
+      m.depthTest = true;
+    });
     (this._outlineMesh.material as THREE.Material).depthTest = true;
   }
 }
-
-const suitOrder = ['DIAMOND', 'CLUB', 'HEART', 'SPADE'];
-const numOrder = [
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10',
-  'JACK',
-  'QUEEN',
-  'KING',
-  'ACE',
-  '2',
-];

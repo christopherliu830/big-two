@@ -1,43 +1,56 @@
-import { Message, MessageBase, GameAction } from 'common';
+import { NetworkMessage, GameAction, Message } from 'common';
 import { Socket } from 'socket.io';
 import { Table } from './manager';
 import { v4 as uuid } from 'uuid';
 import Player from './player';
-import {
-  EventDispatcher,
-  SignalDispatcher,
-  SimpleEventDispatcher,
-} from 'strongly-typed-events';
+import * as Emitter from 'component-emitter';
 
 /**
  * Use a session to associate a connected client to a socket.
  * A socket can change if the user refreshes their tab / reconnects,
  * so methods to send should be restricted to session lists.
  */
-export class Session {
+export abstract class Session extends Emitter {
+
+  /**
+   * The player uuid that represents this session
+   */
   id: string;
+
   table: Table;
   name: string;
   color: string;
+
+  /**
+   * The game-state object
+   */
   player: Player;
 
-  _onGameAction = new EventDispatcher<Session, GameAction.GameAction>();
-  get onGameAction() {
-    return this._onGameAction.asEvent();
+  abstract connected: boolean;
+  abstract send(message: Message.Base): void;
+  abstract sendSessionsList(sessions: Session[]): void;
+  abstract broadcast(message: Message.Base): void;
+
+  constructor(table: Table, config: NetworkMessage.Join.Payload) {
+    super();
+    const { id, name, color } = config;
+
+    this.id = id;
+    this.name = name;
+    this.color = color;
+    this.table = table;
+    this.player = new Player();
   }
-  _onReconnect = new SignalDispatcher();
-  get onConnect() {
-    return this._onReconnect.asEvent();
-  }
+
+
+
+}
+
+export class ClientSession extends Session {
 
   get connected() {
     return this._socket.connected;
   }
-
-  get socket(): Socket | null {
-    return this._socket;
-  }
-
   private _socket!: Socket;
 
   setSocket(socket: Socket) {
@@ -48,79 +61,67 @@ export class Session {
 
     this._socket = socket;
 
-    // If we're replacing the socket, it means a reconnect
-    if (this._socket) this._onReconnect.dispatch();
+    // Forward our socket events
+    this._socket.onAny((event: Message.Type, ...args: unknown[]) => {
+      this.emit(event, ...args);
+      console.log(this.name, '\n', JSON.stringify(args), '\n')
+    })
 
-    // Subscribe to events here
-    this._socket.onAny((...args) =>
-      console.log(this.name, JSON.stringify(args), '\n')
-    );
-    this._socket.on(Message.Type.ClientChat, (p) =>
-      this._handleIncomingChat(p)
-    );
-    this._socket.on(Message.Type.Disconnect, (reason: string) =>
-      this.onDisconnect(socket, reason)
-    );
-    this._socket.on(
-      Message.Type.GameAction,
-      this._handleIncomingGameAction.bind(this)
-    );
+    this.emit(Message.Type.Connect);
   }
 
   constructor(
-    socket: Socket | null,
+    socket: Socket,
     table: Table,
-    config: Message.Join.Payload
+    config: NetworkMessage.Join.Payload
   ) {
-    const { id, name, color } = config;
+    super(table, config);
 
-    this.id = id;
-    this.name = name;
-    this.color = color;
-    this.table = table;
     socket && this.setSocket(socket);
 
-    this.player = new Player();
+    this.on(Message.Type.ClientChat, this._handleIncomingChat);
+    this.on(Message.Type.Disconnect, this._handleDisconnect);
   }
 
-  onDisconnect(socket: Socket, reason: string) {
+  _handleDisconnect = (reason: string): void => {
     console.log(`${this.name} has disconnected. Reason: ${reason}`);
-    this.table.updateRemoteSessions();
+    this.table.notifySessionJoin(this);
   }
 
   /**
-   * Send session data to a client.
-   * @param sessions The session to show in the players list
+   * Send a message to this player
+   * @param message the message to send.
    */
-  sendSessionsData(sessions: Session[]) {
-    const sessionsData = new Message.SessionsData({
-      sessions: sessions
-        .filter((s) => s.connected)
-        .map((session) => ({
-          id: session.id,
-          name: session.name,
-          color: session.color,
-          score: session.player.score,
-          me: session.id === this.id,
-        })),
-    });
-    this._socket.emit(sessionsData.header, sessionsData.payload);
+  send(message: Message.Base) {
+    this._socket.emit(message.header, message.payload);
   }
 
   /**
-   *
-   * @param payload Send a game action to a player
+   * Send a message to all other players.
+   * @param message the message to send.
    */
-  sendGameAction(poo: GameAction.GameAction) {
-    const m = new Message.ActionMessage(poo);
-    this._socket.emit(m.header, m.payload);
+  broadcast(message: Message.Base) {
+    console.log(message.header, message.payload);
+    this._socket.to(this.table.id).broadcast.emit(message.header, message.payload);
+  }
+
+  sendSessionsList(sessions: Session[]) {
+    sessions.filter(s => s.id !== this.id).forEach(toSend => {
+      const sessionData = new NetworkMessage.SessionData({
+        id: toSend.id,
+        name: toSend.name,
+        score: toSend.player.score,
+        color: toSend.color,
+      })
+      this.send(sessionData);
+    }) 
   }
 
   /**
    * Broadcast a socket's data to the table
    */
-  private _handleIncomingChat(payload: Message.FromClientChat.Payload) {
-    const message = new Message.Chat({
+  private _handleIncomingChat(payload: NetworkMessage.FromClientChat.Payload) {
+    const message = new NetworkMessage.Chat({
       key: uuid(),
       message: payload.message,
       sender: this.name,
@@ -130,15 +131,14 @@ export class Session {
   }
 
   /**
-   * Unpack a game action and dispatch its event
+   * Forward any kind of data to everyone else.
+   * @param payload The object to be broadcasted
    */
-  private _handleIncomingGameAction(
-    payload: GameAction.GameAction,
-    callback?: Function
-  ) {
-    payload.callback = callback;
-    this._onGameAction.dispatch(this, payload);
+  private _handleBroadcastObject(payload: NetworkMessage.BroadcastData.Payload) {
+    const message = new NetworkMessage.BroadcastData(payload);
+    this._socket.to(this.table.id).broadcast.emit(message.header, message.payload);
   }
+
 }
 
 /**
@@ -148,14 +148,13 @@ export class FakeSession extends Session {
   get connected() {
     return true;
   }
-
-  constructor(table: Table, config: Message.Join.Payload) {
-    super(null, table, config);
+  constructor(table: Table, config: NetworkMessage.Join.Payload) {
+    super(table, config);
   }
 
-  setSocket() {}
-
-  sendSessionsData(sessions: Session[]) {}
-
-  sendGameAction() {}
+  send(action: Message.Base) { }
+  sendSessionsList() {}
+  broadcast(message: Message.Base) {
+    this.table.io.emit(message.header, message.payload);
+  }
 }

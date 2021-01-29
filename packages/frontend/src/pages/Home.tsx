@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, Button, Grid, Paper, TextField } from '@material-ui/core';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import { GameOptionsForm } from './Home/GameOptionsForm';
-import { useHistory } from 'react-router';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

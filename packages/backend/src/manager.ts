@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
-import { Message } from 'common';
-import { Session, FakeSession } from './session';
+import { NetworkMessage as Message } from 'common';
+import { Session, ClientSession, FakeSession } from './session';
 import { BigTwo } from './BigTwo/BigTwo';
 
 /**
@@ -34,25 +34,27 @@ export class Table {
     const { id, name } = config;
     socket.join(this.id);
 
-    let session: Session;
+    let session: ClientSession;
     if (id in this._tokens) {
-      session = this._tokens[id];
+      session = this._tokens[id] as ClientSession;
       console.log('Reconnecting', session.name, 'as', name);
       session.name = config.name;
       session.color = config.color;
       session.setSocket(socket);
     } else {
-      session = new Session(socket, this, config);
+      session = new ClientSession(socket, this, config);
       console.log(session.name, 'has connected');
+      session.sendSessionsList(this.sessions);
       this._tokens[config.id] = session;
-      this.start();
     }
 
-    this.updateRemoteSessions();
+    this.notifySessionJoin(session);
+    if (this.sessions.length > 1) this.start();
+
   }
 
   start() {
-    while (this.sessions.length < 4) {
+    while (this.sessions.length < 2) {
       const id = uuidv4();
       const config: Message.Join.Payload = {
         id: id,
@@ -67,9 +69,17 @@ export class Table {
 
   /**
    * Resend lobby data to connected sessions.
-   * Only broadcast connected sessions
    */
-  updateRemoteSessions() {
-    this.sessions.forEach((session) => session.sendSessionsData(this.sessions));
+  notifySessionJoin(newSession: Session) {
+    const sData = new Message.SessionData({
+      id: newSession.id,
+      name: newSession.name,
+      color: newSession.color,
+      score: newSession.player.score,
+    });
+
+    this.sessions.filter(s => s.id != newSession.id).forEach(session => {
+      session.send(sData);
+    })
   }
 }

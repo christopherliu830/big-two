@@ -1,3 +1,5 @@
+import { v4 as uuid } from 'uuid';
+
 export namespace Card {
   export enum Suit {
     Hidden = -1,
@@ -27,6 +29,7 @@ export namespace Card {
   export interface Card {
     suit: Suit;
     value: Value;
+    netId?: string;
   }
 
   export function shuffle(cards: Card[]) {
@@ -41,7 +44,7 @@ export namespace Card {
     const deck = [];
     for (let suit = 0; suit < 4; suit++) {
       for (let value = 0; value < 13; value++) {
-        deck.push({ value, suit });
+        deck.push({ value, suit, netId: uuid() });
       }
     }
     return deck;

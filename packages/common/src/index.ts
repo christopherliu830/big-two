@@ -1,6 +1,6 @@
 import { GameAction } from './actions';
-import { Message } from './network-message';
-import { MessageBase } from './message';
+import { NetworkMessage } from './network-message';
+import { Message } from './message';
 import { Card } from './card';
 
-export { GameAction, Message, MessageBase, Card };
+export { GameAction, Message, NetworkMessage, Card };

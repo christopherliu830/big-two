@@ -3,19 +3,8 @@ import { useState, useEffect } from 'react';
 import { PlayerInfo } from '../types';
 import './PlayerList.css';
 
-interface PlayerList {
-  players: any[];
-}
-export const PlayerList: React.FunctionComponent = (props) => {
-  const [playerInfos, setPlayerInfos] = useState([]);
 
-  useEffect(() => {
-    const updatePlayerInfos = (data: any) => {
-      setPlayerInfos(data.players);
-    };
-  }, []);
-
-  console.log(playerInfos);
+export const PlayerList: React.FC = () => {
 
   return (
     <div className="player-list">
@@ -23,12 +12,6 @@ export const PlayerList: React.FunctionComponent = (props) => {
       <div className="body">
         <table>
           <tbody>
-            {playerInfos.map((p) => (
-              <tr key={p.id}>
-                <td>{p.name}</td>
-                <td>{p.score}</td>
-              </tr>
-            ))}
           </tbody>
         </table>
       </div>

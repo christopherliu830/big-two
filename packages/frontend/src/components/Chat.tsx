@@ -1,35 +1,44 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Message } from 'common';
-import { ChatClient } from '../ChatClient';
+import { NetworkMessage as Message } from 'common';
 import './Chat.css';
-import { Network } from '../Network';
+import { Connection } from '../Network';
 
-export const Chat: React.FunctionComponent = (props) => {
+type Props = {
+  connection: Connection;
+};
+
+export const Chat: React.FunctionComponent<Props> = ({ connection }) => {
   const [messages, setMessages] = useState<Message.Chat.Payload[]>([]);
   const [text, setText] = useState('');
 
-  useEffect(() => {
-    Network.on(Message.Type.ServerChat, (data: Message.Chat.Payload) =>
-      handleMessage(data)
-    );
-  }, []);
-
   const handleMessage = (message: Message.Chat.Payload) => {
-    setMessages((messages) => {
-      if (messages.length > 20) {
-        return [...messages.slice(1), message];
+    setMessages((old) => {
+      if (old.length > 10) {
+        return [...old.slice(1), message];
       }
-      return [...messages, message];
+      return [...old, message];
     });
   };
 
+  useEffect(() => {
+    if (connection) {
+      connection.on(Message.Type.ServerChat, handleMessage);
+      return () => {
+        connection.off(Message.Type.ServerChat, handleMessage);
+      };
+    }
+    return null;
+  }, [connection]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (text !== '') {
-      Network.send(new Message.FromClientChat({ message: text }));
-      setText('');
+
+    if (connection && text !== '') {
+      connection.send(new Message.FromClientChat({ message: text }));
     }
+
+    setText('');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -53,10 +53,6 @@ canvas {
   width: 100%;
 }
 
-.game-container {
-  align-items: stretch;
-}
-
 .navbar {
   background: var(--c0);
   color: var(--c9);

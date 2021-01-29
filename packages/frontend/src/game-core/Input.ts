@@ -1,3 +1,4 @@
+import { Message } from 'common';
 import { ISimpleEvent, SimpleEventDispatcher } from 'strongly-typed-events';
 
 interface Vector2 {
@@ -89,3 +90,26 @@ export const Input: InputHandler = {
     });
   },
 };
+
+export interface EnvironmentEvent {
+  event: MouseEvent;
+  hit: RaycastHit;
+}
+
+export interface RaycastHit {
+  object: THREE.Object3D;
+  point: THREE.Vector3;
+  distance: number;
+}
+
+export abstract class InputOutput {
+  abstract get onMouseMove(): ISimpleEvent<EnvironmentEvent>;
+
+  abstract get onMouseDown(): ISimpleEvent<EnvironmentEvent>;
+
+  abstract get onMouseUp(): ISimpleEvent<EnvironmentEvent>;
+
+  abstract submit(message: Message.Base): void;
+
+  mouseDown: number;
+}

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 import { Card, GameAction } from 'common';
-import { CardAvatar } from '../Card';
-import { GameManager } from '../GameManager';
-import { Input } from '../Input';
-import Environment, { RaycastHit } from '../Environment';
+import { CardAvatar } from './Card';
+import { InputOutput, RaycastHit } from './Input';
+import { CardStack } from './Stack';
+import { Quaternion, Vector3 } from 'three';
 
 const config = {
   spread: {
@@ -38,25 +38,32 @@ export class HandAvatar extends THREE.Group {
 
   private _canSelect = false;
 
-  constructor(id: string, local: boolean) {
+  private _input: InputOutput;
+
+  private _inputsEnabled: boolean;
+
+  constructor(id: string, local: boolean, input: InputOutput) {
     super();
     this.playerId = id;
     this.local = local;
 
+    this._handleMouseUp = this._handleMouseUp.bind(this);
+    this._handleMouseDown = this._handleMouseDown.bind(this);
+    this._handleMouseMove = this._handleMouseMove.bind(this);
+    this._input = input;
+
     if (local) {
       this.arc = config.arc.local;
       this.spreadScaling = config.spread.local;
-      this._canSelect = true;
-      Environment.onMouseUp.sub(this._handleMouseUp.bind(this));
-      Environment.onMouseMove.sub(this._handleMouseMove.bind(this));
+      this.enableInputs();
     } else {
       this.arc = config.arc.remote;
       this.spreadScaling = config.spread.remote;
-      this._canSelect = false;
     }
+
   }
 
-  addCard(...cards: CardAvatar[]) {
+  addCard(...cards: CardAvatar[]): void {
     cards.forEach((card) => {
       card.parent?.removeCard(card);
     });
@@ -65,48 +72,70 @@ export class HandAvatar extends THREE.Group {
     this.add(...cards);
     this.cards.push(...cards);
     this.spread();
-
-    return this;
   }
 
-  removeCard = (...cards: CardAvatar[]) => {
-    this.remove(...cards);
+  removeCard = (...cards: CardAvatar[]): void => {
     cards.forEach((card) => {
+      card.getWorldPosition(card.position);
+      card.getWorldQuaternion(card.quaternion);
+      this.remove(card);
       this._selected.delete(card);
       const i = this.cards.indexOf(card);
       if (i > -1) this.cards.splice(i, 1);
     });
   };
 
-  select = (card: CardAvatar, selected: boolean) => {
-    if (this._canSelect) {
-      if (selected) {
-        card.selected = true;
-        this._selected.add(card);
-      } else {
-        card.selected = false;
-        this._selected.delete(card);
-      }
+  playCards = (...cards: Card.Card[]): void => {
+    const avatars: CardAvatar[] = [];
+    cards.forEach(toPlay => {
+      const avatar = this.cards.find((c) => toPlay.netId === c.netId);
+      console.log(avatar.position.x);
+      if (!avatar) throw Error('Did not have card');
+      avatar.switch(toPlay);
+      avatar.disableInteraction();
+      this.removeCard(avatar);
+      avatars.push(avatar);
+    })
+
+    CardStack.Stack.add(...avatars);
+  }
+
+  select = (card: CardAvatar, selected: boolean): void => {
+    if (selected) {
+      card.selected = true;
+      this._selected.add(card);
+    } else {
+      card.selected = false;
+      this._selected.delete(card);
     }
   };
 
-  private _handleMouseUp({
+  enableInputs() {
+    if (!this._inputsEnabled) {
+      this._inputsEnabled = true;
+      this._input.onMouseDown.sub(this._handleMouseDown);
+      this._input.onMouseMove.sub(this._handleMouseMove);
+      this._input.onMouseUp.sub(this._handleMouseUp);
+    }
+  }
+
+  disableInputs() {
+    if (this._inputsEnabled) {
+      this._inputsEnabled = false;
+      this._input.onMouseDown.unsub(this._handleMouseDown);
+      this._input.onMouseMove.unsub(this._handleMouseMove);
+      this._input.onMouseUp.unsub(this._handleMouseUp);
+    }
+  }
+
+  private _handleMouseDown({
     event,
     hit,
   }: {
     event: MouseEvent;
     hit: RaycastHit;
   }) {
-    if (event.button === 0) {
-      // ghetto
-
-      const distFromWorldCenter = hit.point.length();
-      if (distFromWorldCenter < 0.8) {
-        this._submitCards();
-      } else {
-        this.spread();
-      }
-    } else if (event.button === 2) {
+    if (event.button === 2) {
       if (
         hit.object instanceof CardAvatar &&
         this.children.includes(hit.object)
@@ -120,8 +149,21 @@ export class HandAvatar extends THREE.Group {
     }
   }
 
+  private _handleMouseUp({ event, hit }: { event: MouseEvent, hit: RaycastHit }): void {
+    if (event.button === 0) {
+      // ghetto
+
+      const distFromWorldCenter = hit.point.length();
+      if (distFromWorldCenter < 0.8) {
+        this._submitCards();
+      } else {
+        this.spread();
+      }
+    }
+  }
+
   private _handleMouseMove({ hit }: { hit: RaycastHit }) {
-    if (Input.mouseDown === 0) {
+    if (this._input.mouseDown === 0) {
       this._selected.forEach((s) => {
         const p = s.parent;
         s.parent?.remove(s);
@@ -139,7 +181,8 @@ export class HandAvatar extends THREE.Group {
     this._selected.forEach((card) => {
       cards.push({ suit: card.suit, value: card.value });
     });
-    this._canSelect = false;
+    // this._canSelect = false;
+    this.disableInputs();
     this._selected = new Set();
 
     const action = new GameAction.PlayCards({
@@ -148,25 +191,25 @@ export class HandAvatar extends THREE.Group {
     });
 
     action.callback = (succeeded: boolean) => {
-      this._canSelect = true;
+      this.enableInputs();
       this._selected = selectedCards;
 
       if (succeeded) {
         selectedCards.forEach((card) => {
           // Weird positioning stuff means you have to do this
           card.getWorldPosition(card.position);
+          card.disableInteraction();
           this.removeCard(card);
-          this.parent?.add(card);
-          card.position.y = GameManager.stackHeight++ * 0.001;
+          CardStack.Stack.add(card);
         });
-      } else {
-        this.spread();
-      }
+      } 
+      this.spread();
     };
-    GameManager.sendGameAction(action);
+
+    this._input.submit(action);
   }
 
-  spread() {
+  spread(): void {
     const len = this.cards.length;
     if (len === 1) {
       new TWEEN.Tween(this.cards[0].position)
@@ -182,7 +225,8 @@ export class HandAvatar extends THREE.Group {
         .start();
       return;
     }
-    for (let i = 0; i < len; i++) {
+
+    for (let i = 0; i < len; i += 1) {
       const offset = i / (len - 1) - 0.5;
       const rotY = offset * this.rotationScaling;
       new TWEEN.Tween(this.cards[i])
@@ -190,7 +234,7 @@ export class HandAvatar extends THREE.Group {
           {
             position: {
               x: offset * len * this.spreadScaling,
-              z: Math.pow(Math.abs(offset), 2) * this.arc,
+              z: Math.abs(offset) ** 2 * this.arc,
             },
             rotation: {
               y: rotY,
@@ -205,7 +249,7 @@ export class HandAvatar extends THREE.Group {
     }
   }
 
-  raycast(raycaster: THREE.Raycaster, intersects: THREE.Intersection[]) {
+  raycast(raycaster: THREE.Raycaster, intersects: THREE.Intersection[]): void {
     this.cards.forEach((c) => {
       c.raycast(raycaster, intersects);
     });
