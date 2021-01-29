@@ -5,7 +5,6 @@ import type { HandAvatar } from '../Hand';
 import { RaycastHit, InputOutput } from '../Input';
 
 export class CardAvatar extends Mesh implements Card.Card {
-
   suit: Card.Suit;
 
   value: Card.Value;

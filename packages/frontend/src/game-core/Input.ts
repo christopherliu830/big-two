@@ -72,7 +72,6 @@ export const Input: InputHandler = {
     this.mouseDown = -1;
     this._onMouseUp.dispatch(event);
   },
-
   _handleMouseMove(event: MouseEvent) {
     if (this._domEl) {
       const { clientWidth: w, clientHeight: h } = this._domEl;
