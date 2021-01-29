@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 import Player from './player';
 import * as Emitter from 'component-emitter';
 
+
 /**
  * Use a session to associate a connected client to a socket.
  * A socket can change if the user refreshes their tab / reconnects,
@@ -41,9 +42,6 @@ export abstract class Session extends Emitter {
     this.table = table;
     this.player = new Player();
   }
-
-
-
 }
 
 export class ClientSession extends Session {

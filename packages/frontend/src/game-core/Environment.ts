@@ -12,6 +12,7 @@ import { InputOutput, EnvironmentEvent } from './Input';
 import { Vector3 } from 'three';
 import { CardStack } from './Stack';
 
+
 // TODO: Put this somewhere else
 const config = {
   playerPositions: {
@@ -50,16 +51,16 @@ class Environment extends InputOutput {
 
   static worldMouse: THREE.Vector3 = new THREE.Vector3();
 
-  get onMouseMove(): ISimpleEvent<EnvironmentEvent> {
-    return this._onMouseMove.asEvent();
-  }
-
   get onMouseDown(): ISimpleEvent<EnvironmentEvent> {
     return this._onMouseDown.asEvent();
   }
 
   get onMouseUp(): ISimpleEvent<EnvironmentEvent> {
     return this._onMouseUp.asEvent();
+  }
+
+  get onMouseMove(): ISimpleEvent<EnvironmentEvent> {
+    return this._onMouseMove.asEvent();
   }
 
   mouseDown = -1;

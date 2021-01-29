@@ -37,6 +37,7 @@ export class BigTwo {
       session.on(Message.Type.PlayCards, this._handlePlayCards(session));
       session.on(Message.Type.Connect, () => this.resendHistory(session));
     });
+
   }
 
   /**
@@ -46,13 +47,6 @@ export class BigTwo {
   resendHistory(session: Session) {
     session.sendSessionsList(this._sessions);
     this._history.forEach((action) => this._sendFiltered(session, action));
-  }
-
-  /**
-   * Send a session all remote players.
-   * @param session 
-   */
-  private _sendSessionsData = (receiver: Session) => {
   }
 
   private _sendFiltered = (session: Session, action: GameAction.GameAction) => {
