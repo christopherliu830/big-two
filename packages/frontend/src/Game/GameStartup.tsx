@@ -1,10 +1,11 @@
+import { Button, Dialog, DialogActions, DialogContent, TextField } from '@material-ui/core';
 import * as React from 'react';
 import { useState } from 'react';
 import { Modal } from 'react-bootstrap';
 import { ColorPicker } from '../components/ColorPicker';
 
 interface GameStartupPrompt {
-  onClose?: (arg0: string) => void;
+  onClose?: () => void;
   open: boolean;
 }
 
@@ -13,7 +14,6 @@ export const GameStartupPrompt: React.FunctionComponent<GameStartupPrompt> = (
   props
 ) => {
   const { open, onClose } = props;
-  const [show, setShow] = useState(true);
   const [text, setText] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,26 +22,38 @@ export const GameStartupPrompt: React.FunctionComponent<GameStartupPrompt> = (
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onClose && onClose(text);
-    setShow(false);
+    handleClose();
   };
+
+  const handleClose = () => {
+    if (text.length === 0) return; // Don't close without a name
+    window.localStorage.setItem('name', text);
+    onClose && onClose();
+  }
 
   return (
     <>
-      <Modal show={open} centered>
-        <Modal.Body>
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="username">Enter your name</label>
-            <input
-              type="text"
-              name="username"
-              value={text}
-              onChange={handleChange}
-            />
-          </form>
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="sm"
+        fullWidth={true}
+      >
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Name"
+            fullWidth
+            onChange={handleChange}
+            value={text}
+          />
           <ColorPicker />
-        </Modal.Body>
-      </Modal>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} variant="contained" color="primary" >Join</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

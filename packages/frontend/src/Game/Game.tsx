@@ -20,7 +20,11 @@ export const Game: React.FC = () => {
   const params = useParams<{ table: string }>();
 
   useEffect(() => {
-    if (ref.current) setSetup(true);
+    if (ref.current) {
+      let name = window.localStorage.getItem('name');
+      let color = window.localStorage.getItem('color');
+      if (!name || !color) setSetup(true);
+    }
   }, [ref]);
 
   useEffect(() => {
@@ -35,13 +39,24 @@ export const Game: React.FC = () => {
     setEnvironment(env);
   };
 
-  const handleSetupClose = (name: string) => {
+  const handleSetupClose = () => {
+
+    let id = window.localStorage.getItem('playerid');
+    let name = window.localStorage.getItem('name');
+    let color = window.localStorage.getItem('color');
+
+    if (!name || !color) return;
     setSetup(false);
-    if (!getCookie('playerid')) setCookie('playerid', uuid(), 1);
+
+    if (!id) {
+      window.localStorage.setItem('playerid', uuid());
+      id = window.localStorage.getItem('playerid');
+    }
+
     const payload: Message.Join.Payload = {
       name,
-      color: 'black',
-      id: getCookie('playerid'),
+      color,
+      id,
       table: params.table,
     };
     const config = new Message.Join(payload);

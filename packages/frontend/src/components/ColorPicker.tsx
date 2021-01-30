@@ -12,19 +12,21 @@ const colors = [
 
 const useStyles = makeStyles({
   group: {
-    width: '100%',
-    height: '100%',
+    width: '50%',
+    // height: '100%',
     display: 'flex',
     justifyContent: 'space-around',
+    marginLeft: 'auto',
+    marginRight: 'auto',
     marginTop: '0.5em',
     marginBottom: '0.5em',
   },
   button: {
-    flexGrow: 1,
     '&:hover': {
       boxShadow: '0 0 1px 2px black',
       zIndex: 10,
     },
+    borderRadius: '50% !important'
   },
   selected: {
     boxShadow: '0 0 1px 2px black',
@@ -32,15 +34,12 @@ const useStyles = makeStyles({
   },
 })
 
-interface StylizedButtonProps extends ToggleButtonProps {
-  color: string;
-}
-
 export const ColorPicker = () => {
   const classes = useStyles();
-  const [ color, setColor ] = React.useState(colors[0]);
+  const [ color, setColor ] = React.useState('');
 
   const handleChange = (event: React.MouseEvent<HTMLElement>, value: string | null) => {
+    window.localStorage.setItem('color', value);
     console.log(value);
     setColor(value);
   }
@@ -56,11 +55,14 @@ export const ColorPicker = () => {
           root: classes.button,
           selected: classes.selected
         }}
+        // style={{
+        // }}
+        size="large"
       >
-        <div style={{
-          width: '100%',
-          height: '100%',
-        }} />
+        <div />
+        {/* <div style={{
+          borderRadius: '50% !important'
+        }} /> */}
       </ToggleButton>
     )
   };
@@ -71,7 +73,6 @@ export const ColorPicker = () => {
       value={color} 
       exclusive
       onChange={handleChange}
-      size="large"
     >
       { createButton(colors[0]) }
       { createButton(colors[1]) }
