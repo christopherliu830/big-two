@@ -91,6 +91,7 @@ export class ClientSession extends Session {
    * @param message the message to send.
    */
   send(message: Message.Base) {
+    console.log('emitting', message.header, 'to', this.name);
     this._socket.emit(message.header, message.payload);
   }
 

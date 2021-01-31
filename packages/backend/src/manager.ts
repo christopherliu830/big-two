@@ -46,10 +46,11 @@ export class Table {
       console.log(session.name, 'has connected');
       session.sendSessionsList(this.sessions);
       this._tokens[config.id] = session;
+      this.notifySessionJoin(session);
+      if (this.sessions.length > 1) this.start();
     }
 
     this.notifySessionJoin(session);
-    if (this.sessions.length > 1) this.start();
 
   }
 

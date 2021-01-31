@@ -23,19 +23,30 @@ export class BigTwo {
 
     sessions.forEach((session) => {
       session.sendSessionsList(this._sessions);
+
+      const cards = deck.splice(0, 26);
+      cards.sort((a, b) => a.value - b.value);
+
       const action = new GameAction.DrawCards({
         id: session.id,
-        cards: deck.splice(0, 13),
+        cards: cards,
       });
 
       this._history.push(action);
-
       sessions.forEach((s) => {
         this._sendFiltered(s, action);
       });
 
       session.on(Message.Type.PlayCards, this._handlePlayCards(session));
       session.on(Message.Type.Connect, () => this.resendHistory(session));
+      session.on(Message.Type.ClientChat, (p: NetworkMessage.FromClientChat.Payload) => {
+        if (this._sessions[this.turnIndex].id === session.id) {
+	  if (p.message === 'pass') {	
+	    this.turnIndex = (this.turnIndex + 1) % this._sessions.length;
+	    console.log('passing');
+	  }
+        }
+      });
     });
 
   }

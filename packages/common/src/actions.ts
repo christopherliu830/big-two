@@ -56,6 +56,7 @@ export namespace GameAction {
         cards: this.payload.cards.map((c) => ({
           suit: Card.Suit.Hidden,
           value: Card.Value.Hidden,
+	  netId: c.netId,
         })),
       };
       return new DrawCards(copy);
