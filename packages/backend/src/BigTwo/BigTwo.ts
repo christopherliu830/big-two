@@ -19,12 +19,13 @@ export class BigTwo {
     this._sessions = sessions;
     const deck = Card.deck();
     Card.shuffle(deck);
+    const len = deck.length; // 52
 
     sessions.forEach((session) => {
       this._hands[session.id] = [];
       session.sendSessionsList(this._sessions);
 
-      const cards = deck.splice(0, 26);
+      const cards = deck.splice(0, len / this._sessions.length);
       cards.sort(Card.compare);
       this._drawCards(session, cards);
 

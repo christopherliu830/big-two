@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
-import { NetworkMessage as Message } from 'common';
+import { NetworkMessage as Message, NetworkMessage } from 'common';
 import { Session, ClientSession, FakeSession } from './session';
 import { BigTwo } from './BigTwo/BigTwo';
 
@@ -44,14 +44,27 @@ export class Table {
     } else {
       session = new ClientSession(socket, this, config);
       console.log(session.name, 'has connected');
-      session.sendSessionsList(this.sessions);
+      if (this.sessions.length === 0) {
+        this.hookOwner(session);
+      }
       this._tokens[config.id] = session;
+      session.sendSessionsList(this.sessions);
       this.notifySessionJoin(session);
-      if (this.sessions.length > 1) this.start();
     }
 
     this.notifySessionJoin(session);
+  }
 
+  /**
+   * Give the first person to join owner privileges.
+   * Right now that means we listen for their command to start the game.
+   */
+  hookOwner(session: Session) {
+    session.once(Message.FromClientChat.Header, (payload: NetworkMessage.FromClientChat.Payload) => {
+      if (payload.message === '/start') {
+        this.start();
+      }
+    })
   }
 
   start() {

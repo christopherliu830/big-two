@@ -1,5 +1,9 @@
 .commands-component {
     display: flex;
+    background: white;
     flex-flow: column nowrap;
-    margin-top: 40px;
+    margin-top: 8px;
+    padding: 20px;
+    flex: 0 0 20%;
+    justify-content: space-around;
 }
