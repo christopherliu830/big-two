@@ -1,0 +1,5 @@
+.commands-component {
+    display: flex;
+    flex-flow: column nowrap;
+    margin-top: 40px;
+}

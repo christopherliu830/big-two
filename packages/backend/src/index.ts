@@ -6,14 +6,13 @@ import { Request, Response } from 'express';
 const cors = require('cors');
 const express = require('express');
 const app = express();
-const http = require('http').Server(app);
+const http = require('http').createServer(app);
 
 const io = require('socket.io')(http, {
   cors: {
     origin: true,
     preflightContinue: true,
     credentials: true,
-    
     methods: ['GET', 'POST'],
   },
 });
@@ -21,8 +20,6 @@ const io = require('socket.io')(http, {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded());
-
-http.listen(3000, () => console.log('listening on', 3000));
 
 const tables: Record<string, Table> = {};
 app.post('/create-room', (req: Request, res: Response) => {
@@ -32,6 +29,7 @@ app.post('/create-room', (req: Request, res: Response) => {
   tables[tableId] = new Table(io, tableId);
   res.status(200).send({table: tableId});
 })
+http.listen(3000, () => console.log('listening on', 3000));
 
 io.on(Message.Type.Connect, (socket: Socket) => {
   // Disable socket.send

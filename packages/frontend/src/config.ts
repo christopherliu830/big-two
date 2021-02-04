@@ -1,0 +1,2 @@
+export const API_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://api.largetwo.io';
+export const SOCKET_URL = process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : 'wss://api.largetwo.io';

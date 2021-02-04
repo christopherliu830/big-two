@@ -35,8 +35,6 @@ export class HandAvatar extends THREE.Group {
 
   private _selected: Set<CardAvatar> = new Set();
 
-  private _canSelect = false;
-
   private _input: InputOutput;
 
   private _inputsEnabled: boolean;
@@ -136,7 +134,7 @@ export class HandAvatar extends THREE.Group {
   }) {
     if (event.button === 2) {
       if (
-        hit.object instanceof CardAvatar &&
+        hit && hit.object instanceof CardAvatar &&
         this.children.includes(hit.object)
       ) {
         if (this._selected.has(hit.object)) {
@@ -178,7 +176,7 @@ export class HandAvatar extends THREE.Group {
     const cards: Card.Card[] = [];
     const selectedCards = this._selected;
     this._selected.forEach((card) => {
-      cards.push({ suit: card.suit, value: card.value });
+      cards.push({ suit: card.suit, value: card.value, netId: card.netId });
     });
     // this._canSelect = false;
     this.disableInputs();
@@ -194,18 +192,33 @@ export class HandAvatar extends THREE.Group {
       this._selected = selectedCards;
 
       if (succeeded) {
-        selectedCards.forEach((card) => {
-          // Weird positioning stuff means you have to do this
-          card.getWorldPosition(card.position);
-          card.disableInteraction();
-          this.removeCard(card);
-          CardStack.Stack.add(card);
-        });
+        // selectedCards.forEach((card) => {
+        //   // Weird positioning stuff means you have to do this
+        //   card.getWorldPosition(card.position);
+        //   card.disableInteraction();
+        //   this.removeCard(card);
+        //   CardStack.Stack.add(card);
+        //   this.playCards()
+        // });
+        this.spreadInstant();
+        this.playCards(...selectedCards);
       } 
       this.spread();
     };
 
     this._input.submit(action);
+  }
+
+  spreadInstant(): void {
+    const len = this.cards.length;
+    for (let i = 0; i < len; i += 1) {
+      const offset = i / (len - 1) - 0.5;
+      const rotY = offset * this.rotationScaling;
+      this.cards[i].position.setX(offset * len * this.spreadScaling);
+      this.cards[i].position.setZ(Math.abs(offset) ** 2 * this.arc);
+      this.cards[i].position.y = i * 0.001;
+      this.cards[i].rotation.y = rotY;
+    }
   }
 
   spread(): void {

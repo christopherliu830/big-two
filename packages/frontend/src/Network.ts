@@ -1,18 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { Message } from 'common';
-import Emitter from 'component-emitter';
 
 type Handler = (...args: any[]) => void;
-
-// interface Network {
-//   socket: Socket;
-
-//   connect(url: string, config: Message.Base, cb: () => void): void;
-//   send(data: Message.Base, callback?: Function): void;
-//   on(action: Message.Type, handler: Handler): any;
-//   off(action: Message.Type, handler: Handler): void;
-//   _queuedHandlers: Array<{ action: Message.Type; handler: Handler }>;
-// }
 
 /** A simple socket.io wrapper, restricting sent messages to
  *  Message.Type
@@ -22,6 +11,7 @@ export class Connection {
 
   // Don't destroy?
   constructor(url: string, config: Message.Base) {
+    console.log('connect', url);
     this._socket = io(url);
 
     this.once(Message.Type.Connect, () => {
@@ -63,37 +53,3 @@ export class Connection {
     return this._socket.disconnect();
   }
 }
-
-// export const Network: Network = {
-//   socket: null,
-//   _queuedHandlers: [],
-
-//   connect(this: Network, url, config, cb) {
-//     if (!this.socket) this.socket = io(url);
-//     this.socket.connect();
-
-//     this._queuedHandlers.forEach(({ action, handler }) => {
-//       this.socket.on(action, handler);
-//     });
-//     this._queuedHandlers.length = 0;
-
-//     this.socket.on(Message.Type.Connect, () => {
-//       this.send(config);
-//       cb();
-//     });
-//   },
-
-//   send(this: Network, data, callback?: Function) {
-//     this.socket.emit(data.header, data.payload, callback);
-//   },
-
-//   on(this: Network, action, handler) {
-//     console.log('on', action, handler);
-//     if (!this.socket) return this._queuedHandlers.push({ action, handler });
-//     return this.socket.on(action, handler);
-//   },
-
-//   off(this: Network, action, handler) {
-//     return this.socket.off(action, handler);
-//   },
-// };

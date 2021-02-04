@@ -69,10 +69,8 @@ export class CardAvatar extends Mesh implements Card.Card {
    */
   switch(card: Card.Card) {
     const { suit, value } = card;
-    const { geometry, material } = load(suit, value, 0);
+    const { material } = load(suit, value, 0);
     this.material = material;
-    this.geometry = geometry;
-    this._outlineMesh = generateOutlineMesh(this);
   }
 
   private _onMouseMove({ hit }: { hit: RaycastHit }) {

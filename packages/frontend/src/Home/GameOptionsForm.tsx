@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Box,
   Button,
@@ -12,8 +13,8 @@ import {
 } from '@material-ui/core';
 import { useHistory } from 'react-router-dom';
 import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
+import { API_URL } from '../config';
 
-import React from 'react';
 
 type Props = {
   className: string;
@@ -82,15 +83,15 @@ export const GameOptionsForm: React.FC<Props> = ({ className }) => {
     const options: RequestInit = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        rounds,
-        winCondition,
-        hidden,
+      body: new URLSearchParams({
+        rounds: rounds.toString(),
+        winCondition: winCondition,
+        hidden: hidden.toString(),
       }),
     };
-    fetch('http://localhost:3000/create-room', options)
+    fetch(API_URL + '/create-room', options)
       .then((response) => {
         return response.json();
       })

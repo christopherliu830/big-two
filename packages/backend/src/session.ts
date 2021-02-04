@@ -30,6 +30,7 @@ export abstract class Session extends Emitter {
   abstract connected: boolean;
   abstract send(message: Message.Base): void;
   abstract sendSessionsList(sessions: Session[]): void;
+  abstract sendSystemChat(chat: string): void;
   abstract broadcast(message: Message.Base): void;
 
   constructor(table: Table, config: NetworkMessage.Join.Payload) {
@@ -104,8 +105,12 @@ export class ClientSession extends Session {
     this._socket.to(this.table.id).broadcast.emit(message.header, message.payload);
   }
 
+  /**
+   * Send the list of sessions to a player. This includes the session itself.
+   * @param sessions The sessions list.
+   */
   sendSessionsList(sessions: Session[]) {
-    sessions.filter(s => s.id !== this.id).forEach(toSend => {
+    sessions.forEach(toSend => {
       const sessionData = new NetworkMessage.SessionData({
         id: toSend.id,
         name: toSend.name,
@@ -117,9 +122,27 @@ export class ClientSession extends Session {
   }
 
   /**
-   * Broadcast a socket's data to the table
+   * Send a chat from the server.
+   * @param payload 
+   */
+  sendSystemChat(chat: string) {
+    const message = new NetworkMessage.Chat({
+      key: uuid(),
+      message: chat,
+      sender: 'System',
+      color: 'gray',
+    });
+    this._socket.emit(message.header, message.payload);
+  }
+
+  /**
+   * Broadcast a socket's chat to the table
    */
   private _handleIncomingChat(payload: NetworkMessage.FromClientChat.Payload) {
+    if (payload.message[0] === '/') {
+      // Ignore command messages
+      return;
+    }
     const message = new NetworkMessage.Chat({
       key: uuid(),
       message: payload.message,
@@ -153,6 +176,11 @@ export class FakeSession extends Session {
 
   send(action: Message.Base) { }
   sendSessionsList() {}
+
+  sendSystemChat(message: string) {
+    console.log(this.name, 'received:', message);
+  }
+
   broadcast(message: Message.Base) {
     this.table.io.emit(message.header, message.payload);
   }

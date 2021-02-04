@@ -26,11 +26,12 @@ export namespace Message {
     Join = 'JOIN',
     JoinAck = 'JOIN_ACK',
     BroadcastData = 'BROADCAST_DATA',
+    GameStart = 'GAME_START',
 
-    GameAction = 'GAME_ACTION',
     // Game Actions
     PlayCards = 'PLAY_CARDS',
     Pass = 'PASS',
     DrawCards = 'DRAW_CARDS',
+    BeginTrick = 'BEGIN_TRICK',
   }
 }

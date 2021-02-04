@@ -94,9 +94,10 @@ class Environment extends InputOutput {
     connection.on(Message.Type.DrawCards, this.addCards);
     connection.on(Message.Type.SessionsData, this.updateSessions);
     connection.on(Message.Type.PlayCards, this.playCards);
+    connection.on(Message.Type.BeginTrick, this.beginTrick);
     this.submit = this._submitWrapper(connection.send.bind(connection));
 
-    // CardStack.create();
+    CardStack.create();
     this.scene.add(CardStack.Stack);
 
     this.close = () => {
@@ -107,6 +108,7 @@ class Environment extends InputOutput {
       connection.off(Message.Type.DrawCards, this.addCards);
       connection.off(Message.Type.SessionsData, this.updateSessions);
       connection.off(Message.Type.PlayCards, this.playCards);
+      connection.off(Message.Type.BeginTrick, this.beginTrick);
       this.submit = null;
 
       canvas.remove();
@@ -184,6 +186,13 @@ class Environment extends InputOutput {
     Environment.raycaster.set(origin, down);
 
     hand.playCards(...cards);
+  }
+
+  beginTrick = (): void => {
+    this.scene.remove(CardStack.Stack);
+    CardStack.destroy();
+    CardStack.create();
+    this.scene.add(CardStack.Stack);
   }
 
   updateSessions = (payload: NetworkMessage.SessionData.Payload): void => {

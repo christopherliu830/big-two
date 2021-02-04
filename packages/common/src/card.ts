@@ -29,7 +29,7 @@ export namespace Card {
   export interface Card {
     suit: Suit;
     value: Value;
-    netId?: string;
+    netId: string;
   }
 
   export function shuffle(cards: Card[]) {
@@ -48,5 +48,13 @@ export namespace Card {
       }
     }
     return deck;
+  }
+
+  /**
+   * Comparison function for sorting. 
+   */
+  export function compare(a: Card, b: Card) {
+    if (a.value !== b.value) return a.value - b.value;
+    else return a.suit - b.suit;
   }
 }

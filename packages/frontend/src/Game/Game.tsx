@@ -9,13 +9,15 @@ import { PlayerList } from './PlayerList';
 import { GameStartupPrompt } from './GameStartup';
 import { Environment } from '../lib/Environment';
 import { Connection } from '../Network';
-import { setCookie, getCookie } from '../util';
+import { SOCKET_URL }  from '../config';
 import './style.css';
+import { CommandsComponent } from './CommandsComponent';
 
 export const Game: React.FC = () => {
   const [inSetup, setSetup] = useState(false);
   const [environment, setEnvironment] = useState(null);
   const [connection, setConnection] = useState(null);
+  const [config, setConfig] = useState({});
   const ref = React.useRef<HTMLDivElement>();
   const params = useParams<{ table: string }>();
 
@@ -24,6 +26,7 @@ export const Game: React.FC = () => {
       let name = window.localStorage.getItem('name');
       let color = window.localStorage.getItem('color');
       if (!name || !color) setSetup(true);
+      else handleSetupClose();
     }
   }, [ref]);
 
@@ -59,8 +62,9 @@ export const Game: React.FC = () => {
       id,
       table: params.table,
     };
+    setConfig(payload);
     const config = new Message.Join(payload);
-    const c = new Connection('ws://localhost:3000', config);
+    const c = new Connection(SOCKET_URL, config);
     c.once(Message.Type.Connect, () => initialize(c, payload));
     setConnection(c);
   };
@@ -74,8 +78,9 @@ export const Game: React.FC = () => {
         <Container fluid className="my-auto">
           <Row className="h-100 align-items-stretch justify-content-center">
 
-            <Col xl={2}>
-              <PlayerList />
+            <Col className="d-flex flex-column" xl={2}>
+              <PlayerList connection={connection} />
+              <CommandsComponent connection={connection} />
             </Col>
 
             <Col id="game" xl={6} className="h-100" ref={ref} />

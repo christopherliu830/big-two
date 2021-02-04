@@ -48,6 +48,8 @@ export namespace NetworkMessage {
   export class FromClientChat extends Message.Base {
     header = FromClientChat.Header;
     payload: FromClientChat.Payload;
+    
+    constructor(payload: FromClientChat.Payload) { super(payload); }
   }
   export namespace FromClientChat {
     export const Header = Message.Type.ClientChat;
@@ -83,5 +85,29 @@ export namespace NetworkMessage {
   }
   export namespace BroadcastData {
     export interface Payload extends Message.Payload { }
+  }
+
+  export class BeginTrick extends Message.Base {
+    header = BeginTrick.Type;
+    payload = {};
+
+    filter = () => this;
+
+    constructor() { super({}); }
+  }
+  export namespace BeginTrick {
+    export const Type = Message.Type.BeginTrick;
+  }
+
+  export class GameStart extends Message.Base {
+    header = GameStart.Type;
+    payload = {};
+
+    filter = () => this;
+
+    constructor() { super({}); }
+  }
+  export namespace GameStart {
+    export const Type = Message.Type.GameStart;
   }
 }
