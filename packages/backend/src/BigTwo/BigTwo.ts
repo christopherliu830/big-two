@@ -105,6 +105,7 @@ export class BigTwo {
       this._history.push(action);
       session.broadcast(action);
       callback && callback(true);
+      this._passInRow = 0;
       this._incrementTurn();
       return;
     }
