@@ -19,13 +19,12 @@ export class BigTwo {
     this._sessions = sessions;
     const deck = Card.deck();
     Card.shuffle(deck);
-    const len = deck.length; // 52
 
     sessions.forEach((session) => {
       this._hands[session.id] = [];
       session.sendSessionsList(this._sessions);
 
-      const cards = deck.splice(0, len / this._sessions.length);
+      const cards = deck.splice(0, 13);
       cards.sort(Card.compare);
       this._drawCards(session, cards);
 
@@ -86,7 +85,7 @@ export class BigTwo {
 
     // Are all these cards in our hand?
     for(let i = 0; i < cards.length; i++) {
-      if (!has[cards[i].netId]) {
+      if (has[cards[i].netId] === undefined) {
         session.sendSystemChat(`You don't have that card!`);
         callback && callback(false);
         return;
