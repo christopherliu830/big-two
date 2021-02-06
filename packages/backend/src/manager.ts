@@ -44,9 +44,7 @@ export class Table {
     } else {
       session = new ClientSession(socket, this, config);
       console.log(session.name, 'has connected');
-      if (this.sessions.length === 0) {
-        this.hookOwner(session);
-      }
+      this.hookOwner(session);
       this._tokens[config.id] = session;
       session.sendSessionsList(this.sessions);
       this.notifySessionJoin(session);

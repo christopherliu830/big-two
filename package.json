@@ -7,6 +7,5 @@
   "scripts": {
     "build": "lerna run build",
     "serve": "lerna run start"
-  },
-  "dependencies": {}
+  }
 }
