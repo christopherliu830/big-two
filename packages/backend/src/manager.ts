@@ -12,6 +12,7 @@ export class Table {
   io: Server;
 
   private _game = new BigTwo();
+  private _ownerid: string; 
 
   get sessions() {
     return Object.values(this._tokens);
@@ -23,16 +24,18 @@ export class Table {
    */
   private _tokens: { [token: string]: Session } = {};
 
-  constructor(io: Server, id?: string) {
-    this.id = id ? id : uuidv4();
+  constructor(io: Server, id: string, ownerid: string) {
+    this.id = id;
 
     // Create a room on the socket.io server
     this.io = io.to(this.id);
+    this._ownerid = ownerid;
   }
 
   join(socket: Socket, config: Message.Join.Payload) {
     const { id, name } = config;
     socket.join(this.id);
+
 
     let session: ClientSession;
     if (id in this._tokens) {
@@ -44,10 +47,13 @@ export class Table {
     } else {
       session = new ClientSession(socket, this, config);
       console.log(session.name, 'has connected');
-      this.hookOwner(session);
       this._tokens[config.id] = session;
       session.sendSessionsList(this.sessions);
       this.notifySessionJoin(session);
+    }
+
+    if (config.id === this._ownerid) {
+      this.hookOwner(session);
     }
 
     this.notifySessionJoin(session);

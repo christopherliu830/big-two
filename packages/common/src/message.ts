@@ -27,6 +27,7 @@ export namespace Message {
     JoinAck = 'JOIN_ACK',
     BroadcastData = 'BROADCAST_DATA',
     GameStart = 'GAME_START',
+    SetOwner = 'SET_OWNER',
 
     // Game Actions
     PlayCards = 'PLAY_CARDS',

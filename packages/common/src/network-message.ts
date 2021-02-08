@@ -110,4 +110,17 @@ export namespace NetworkMessage {
   export namespace GameStart {
     export const Type = Message.Type.GameStart;
   }
+
+  export class SetOwner extends Message.Base {
+    header = SetOwner.Type;
+    payload = {};
+
+    filter = () => this;
+
+    constructor() { super({}); }
+  }
+  export namespace SetOwner {
+    export const Type = Message.Type.SetOwner;
+  }
+  
 }
