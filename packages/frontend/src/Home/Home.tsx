@@ -72,14 +72,14 @@ export const Home: React.FC = () => {
               p="1em"
               display="flex"
               flexDirection="column"
+              justifyContent="end"
               className={classes.panelItem}
             >
-              <h1>Large Two</h1>
-              <TextField className={classes.input} label="Name" />
+              <h1 style={{marginBottom: 'auto'}}>Large Two</h1>
               <Button className={classes.primary} onClick={handleClick}>
                 Create a room
               </Button>
-              <Button className={classes.secondary}>Browse</Button>
+              {/* <Button className={classes.secondary}>Browse</Button> */}
             </Box>
 
             <GameOptionsForm className={classes.panelItem} />
