@@ -1,5 +1,5 @@
-import { Session } from '../session';
-import { Card, Message, GameAction, NetworkMessage } from 'common';
+import { Session } from "../session";
+import { Card, Message, GameAction, NetworkMessage } from "common";
 
 export class BigTwo {
   /**
@@ -15,7 +15,7 @@ export class BigTwo {
   private _turnIndex = 0;
   private _passInRow = 0;
 
-  start(sessions: Session[]) {
+  start(sessions: Session[]): void {
     this._sessions = sessions;
     const deck = Card.deck();
     Card.shuffle(deck);
@@ -34,12 +34,11 @@ export class BigTwo {
     });
   }
 
-
   /**
    * When a session reconnects, catch them up on the game's history and current session data.
    * @param session
    */
-  resendHistory(session: Session) {
+  resendHistory(session: Session): void {
     session.sendSessionsList(this._sessions);
     this._history.forEach((action) => this._sendFiltered(session, action));
   }
@@ -53,8 +52,8 @@ export class BigTwo {
   };
 
   private _reset() {
-    const message = new NetworkMessage.BeginTrick(); 
-    this._sessions.forEach(s => s.send(message)); 
+    const message = new NetworkMessage.BeginTrick();
+    this._sessions.forEach((s) => s.send(message));
     this._top.length = 0;
     this._passInRow = 0;
   }
@@ -64,9 +63,11 @@ export class BigTwo {
    * called with true meaning the cards were played successfully.
    * @param session The session trying to play cards.
    */
-  private _handlePlayCards = (session : Session) => (payload: GameAction.PlayCards.Payload, callback: Function) => {
-
-    // Is this our turn? 
+  private _handlePlayCards = (session: Session) => (
+    payload: GameAction.PlayCards.Payload,
+    callback: (arg: boolean) => void
+  ) => {
+    // Is this our turn?
     if (this._sessions[this._turnIndex].id !== session.id) {
       session.sendSystemChat(`It's not your turn.`);
       callback && callback(false);
@@ -78,13 +79,13 @@ export class BigTwo {
     const hand = this._hands[session.id];
 
     // Build a record to check if hand has cards
-    const has: Record<string, number> = {}; 
-    for(let i = 0; i < hand.length; i++) {
+    const has: Record<string, number> = {};
+    for (let i = 0; i < hand.length; i++) {
       has[hand[i].netId] = i;
     }
 
     // Are all these cards in our hand?
-    for(let i = 0; i < cards.length; i++) {
+    for (let i = 0; i < cards.length; i++) {
       if (has[cards[i].netId] === undefined) {
         session.sendSystemChat(`You don't have that card!`);
         callback && callback(false);
@@ -96,7 +97,7 @@ export class BigTwo {
       // Cards are valid, play them
       this._top = cards;
 
-      for(let i = cards.length - 1; i >= 0; i--) {
+      for (let i = cards.length - 1; i >= 0; i--) {
         const index = has[cards[i].netId];
         hand.splice(index, 1);
       }
@@ -111,15 +112,16 @@ export class BigTwo {
     }
 
     callback && callback(false);
-  }
+  };
 
-  private _handlePass = (session: Session) => (payload: NetworkMessage.FromClientChat.Payload) => {
-    if (payload.message === '/pass') {
+  private _handlePass = (session: Session) => (
+    payload: NetworkMessage.FromClientChat.Payload
+  ) => {
+    if (payload.message === "/pass") {
       if (this._sessions[this._turnIndex].id !== session.id) {
         session.sendSystemChat(`It's not your turn.`);
-      }
-      else {
-        session.sendSystemChat('You passed.');
+      } else {
+        session.sendSystemChat("You passed.");
         this._passInRow += 1;
         if (this._passInRow === this._sessions.length - 1) {
           this._reset();
@@ -127,13 +129,15 @@ export class BigTwo {
         this._incrementTurn();
       }
     }
-  }
+  };
 
   private _incrementTurn() {
     this._turnIndex = (this._turnIndex + 1) % this._sessions.length;
-    this._sessions.forEach(s => {
-      s.sendSystemChat(`It is now ${this._sessions[this._turnIndex].name}'s turn.`);
-    })
+    this._sessions.forEach((s) => {
+      s.sendSystemChat(
+        `It is now ${this._sessions[this._turnIndex].name}'s turn.`
+      );
+    });
   }
 
   /**
@@ -143,19 +147,23 @@ export class BigTwo {
    */
   private _isValid(top: Card.Card[], cards: Card.Card[], session: Session) {
     cards.sort(Card.compare);
-    if (cards.length === 0) throw Error('Tried to play 0 cards');
+    if (cards.length === 0) throw Error("Tried to play 0 cards");
 
     if (top.length > 0 && top.length !== cards.length) {
-      session.sendSystemChat('You must play a hand of the same length as the last.');
+      session.sendSystemChat(
+        "You must play a hand of the same length as the last."
+      );
       return false;
     }
 
     // Non-poker hands
     if (cards.length < 5) {
       // Cards being played must be all the same value
-      for(let i = 0; i < cards.length; i++) {
+      for (let i = 0; i < cards.length; i++) {
         if (cards[i].value != cards[0].value) {
-          session.sendSystemChat('You must play cards that are of the same value.');
+          session.sendSystemChat(
+            "You must play cards that are of the same value."
+          );
           return false;
         }
       }
@@ -165,8 +173,10 @@ export class BigTwo {
 
       // Cards must be higher value than last play
       const len = top.length;
-      if (Card.compare(top[len-1], cards[len-1]) > 0) {
-        session.sendSystemChat('You must play cards of higher value than those of the last.');
+      if (Card.compare(top[len - 1], cards[len - 1]) > 0) {
+        session.sendSystemChat(
+          "You must play cards of higher value than those of the last."
+        );
         return false;
       }
 

@@ -6,9 +6,10 @@
   "scripts": {
     "build:dev": "webpack --mode development",
     "build": "webpack --mode development",
-    "build:prod": "webpack --mode production",
+    "build-prod": "webpack --mode production",
     "start": "webpack serve --mode development",
     "format": "prettier --write src",
+    "deploy": "npm run build-prod && aws s3 sync --profile lletter dist s3://largetwo.io",
     "lint": "eslint --fix src"
   },
   "keywords": [],
