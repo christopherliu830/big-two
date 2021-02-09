@@ -6,7 +6,5 @@ import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import { API_URL } from './config';
 
-console.log(API_URL);
-
 ReactDOM.render(<App />, document.getElementById('root'));
 window.addEventListener('contextmenu', (e) => e.preventDefault());
