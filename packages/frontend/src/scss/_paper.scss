@@ -1,0 +1,29 @@
+@use 'variables' as *;
+@use 'override' as b;
+
+@mixin paper($background) {
+  @include flat($background);
+  box-shadow: 4px 4px 0 0 black;
+}
+
+@mixin flat($background, $color: b.color-contrast($background)) {
+  background: $background;
+  color: $color;
+}
+
+.paper {
+  @include paper($background-light);
+}
+
+.flat {
+  @include flat($background-light);
+}
+
+@each $color, $value in b.$theme-colors {
+  .paper-#{$color} {
+    @include paper($value);
+  }
+  .flat-#{$color} {
+    @include flat($value);
+  }
+}

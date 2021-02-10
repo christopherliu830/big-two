@@ -1,0 +1,35 @@
+@use 'variables' as *;
+@forward 'bootstrap' with (
+  $font-family-sans-serif: 'Open Sans',
+  $border-radius: 2px,
+  $enable-shadows: true,
+  $primary: $primary-dark,
+  $secondary: $secondary-dark,
+
+  // Carousel
+  $carousel-transition-duration: 0.3s,
+
+  // Form Range
+  $form-range-thumb-border-radius: 0,
+  $form-range-thumb-height: 2rem,
+  $form-range-thumb-box-shadow: $button-elevation $button-elevation 0 0 black,
+  $form-range-thumb-focus-box-shadow: '',
+  $form-range-thumb-active-bg: $primary,
+  $form-range-thumb-bg: $primary,
+);
+
+.form-range {
+  &::-webkit-slider-thumb,
+  &::-moz-range-thumb {
+    transition: box-shadow 0s;
+    box-shadow: $button-elevation $button-elevation 0 0 black;
+  }
+
+  &:active {
+    &::-webkit-slider-thumb,
+    &::-moz-range-thumb {
+      transform: translate($button-elevation, $button-elevation);
+      box-shadow: 0 0 0 0 black;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+@use 'variables' as *;
+@use 'override' as b;
+
+.btn-styled {
+  @extend .btn;
+  width: 100%;
+  line-height: 2;
+  font-size: 1.5rem;
+  transition: box-shadow 0s;
+
+  &:active {
+    transform: translate($button-elevation, $button-elevation);
+    box-shadow: 0 0 0 0;
+  }
+}
+
+.btn-check:checked + .btn-styled {
+  transform: translate($button-elevation, $button-elevation);
+  box-shadow: 0 0 0 0;
+}
+
+@each $color, $value in b.$theme-colors {
+  .btn-styled-#{$color} {
+    @include b.button-variant($value, $value);
+    box-shadow: $button-elevation $button-elevation 0 0 black;
+  }
+}
+
+// .form-range::-webkit-slider-thumb:active,
+// .form-range::-moz-range-thumb:active {
+//   transform: translate($button-elevation, $button-elevation);
+// }

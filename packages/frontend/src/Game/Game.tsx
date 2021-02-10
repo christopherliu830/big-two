@@ -1,23 +1,24 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Navbar } from 'react-bootstrap';
-import { v4 as uuid } from 'uuid';
+import { Container, Row, Col, Button, ButtonGroup } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
-import { NetworkMessage as Message } from 'common';
+import { NetworkMessage as Message, NetworkMessage } from 'common';
+import { PLAYER_ID } from '../config';
 import { Chat } from './Chat';
 import { PlayerList } from './PlayerList';
 import { GameStartupPrompt } from './GameStartup';
 import { Environment } from '../lib/Environment';
 import { Connection } from '../Network';
-import { SOCKET_URL }  from '../config';
-import './style.css';
-import { CommandsComponent } from './CommandsComponent';
+import { SOCKET_URL } from '../config';
+import { CommandGroup } from './CommandGroup';
+import './Game.scss';
 
 export const Game: React.FC = () => {
   const [inSetup, setSetup] = useState(false);
   const [environment, setEnvironment] = useState(null);
   const [connection, setConnection] = useState(null);
-  const [config, setConfig] = useState({});
+  const [owner, setOwner] = useState(false);
+  const [lenPlayers, setLenPlayers] = useState(1);
   const ref = React.useRef<HTMLDivElement>();
   const params = useParams<{ table: string }>();
 
@@ -34,6 +35,10 @@ export const Game: React.FC = () => {
     return () => environment && environment.close();
   }, [environment]);
 
+  useEffect(() => {
+    environment && environment.onResize();
+  });
+
   const initialize = (c: Connection, config: Message.Join.Payload) => {
     const env = new Environment(c);
     ref.current.appendChild(env.renderer.domElement);
@@ -43,18 +48,12 @@ export const Game: React.FC = () => {
   };
 
   const handleSetupClose = () => {
-
-    let id = window.localStorage.getItem('playerid');
+    let id = PLAYER_ID;
     let name = window.localStorage.getItem('name');
     let color = window.localStorage.getItem('color');
 
     if (!name || !color) return;
     setSetup(false);
-
-    if (!id) {
-      window.localStorage.setItem('playerid', uuid());
-      id = window.localStorage.getItem('playerid');
-    }
 
     const payload: Message.Join.Payload = {
       name,
@@ -62,35 +61,56 @@ export const Game: React.FC = () => {
       id,
       table: params.table,
     };
-    setConfig(payload);
     const config = new Message.Join(payload);
     const c = new Connection(SOCKET_URL, config);
     c.once(Message.Type.Connect, () => initialize(c, payload));
+    c.once(Message.Type.SetOwner, () => setOwner(true));
     setConnection(c);
+  };
+
+  const handleSessionsChange = (
+    sessions: NetworkMessage.SessionData.Payload[]
+  ) => {
+    setLenPlayers(sessions.length);
+  };
+
+  const handleStart = () => {
+    const message = new NetworkMessage.FromClientChat({ message: '/start' });
+    connection.send(message);
+  };
+
+  const handlePass = () => {
+    const message = new NetworkMessage.FromClientChat({ message: '/pass' });
+    connection.send(message);
   };
 
   return (
     <>
-      <Navbar className="header navbar-dark">
-        <Navbar.Brand>Big Two Online</Navbar.Brand>
-      </Navbar>
-      <div id="app">
-        <Container fluid className="my-auto">
-          <Row className="h-100 align-items-stretch justify-content-center">
+      <Container fluid className="container">
+        <Row className="h-75 w-100 my-auto align-items-stretch">
+          <Col className="d-flex flex-column h-100" xl={2}>
+            <PlayerList
+              connection={connection}
+              onChange={handleSessionsChange}
+            />
+          </Col>
 
-            <Col className="d-flex flex-column" xl={2}>
-              <PlayerList connection={connection} />
-              <CommandsComponent connection={connection} />
-            </Col>
+          <Col className="paper px-0 main-window h-100">
+            <div className="game" ref={ref}></div>
+            <CommandGroup
+              owner={owner}
+              started={false}
+              lenPlayers={lenPlayers}
+              onStart={handleStart}
+              onPass={handlePass}
+            />
+          </Col>
 
-            <Col id="game" xl={6} className="h-100" ref={ref} />
-
-            <Col xl={2} className="h-100">
-              <Chat connection={connection} />
-            </Col>
-          </Row>
-        </Container>
-      </div>
+          <Col xl={2} className="h-100">
+            <Chat connection={connection} />
+          </Col>
+        </Row>
+      </Container>
       {!environment && (
         <div className="connecting-box">
           <h1>Connecting...</h1>

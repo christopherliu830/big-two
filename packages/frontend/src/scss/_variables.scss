@@ -1,0 +1,32 @@
+$font-family-sans-serif: 'Open Sans';
+$border-radius: 2px;
+$enable-shadows: true;
+
+// Colors
+$background: #282d2f;
+$background-light: #f0f0f0;
+$background-dark: #313c44;
+$primary-dark: #672f2f;
+$secondary-dark: #3f4048;
+$primary-light: #ccccff;
+$secondary-light: #ffffcc;
+$primary: $primary-dark;
+$secondary: $secondary-dark;
+
+$background-colors: (
+  $background: #282d2f,
+);
+
+// Button
+$button-elevation: 2px;
+
+// Carousel
+$carousel-transition-duration: 0.3s;
+
+// Form Range
+$form-range-thumb-border-radius: 0;
+$form-range-thumb-height: 2rem;
+$form-range-thumb-box-shadow: $button-elevation $button-elevation 0 0 black;
+$form-range-thumb-focus-box-shadow: '';
+$form-range-thumb-active-bg: $primary;
+$form-range-thumb-bg: $primary;

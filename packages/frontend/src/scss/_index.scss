@@ -1,0 +1,22 @@
+@use 'paper';
+@use 'buttons';
+@forward 'typography';
+@forward 'variables';
+
+body {
+  // https://doodad.dev/pattern-generator?share=stripes-0-49_60_68_1-41_54_61_1-40_45_47_1-48-135-8-4-12-0-0-0-0-0-0
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIj48ZGVmcz48cGF0dGVybiBpZD0icGF0dGVybiIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiB2aWV3Qm94PSIwIDAgNDAsNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSgxMzUpICI+PHJlY3QgaWQ9InBhdHRlcm4tYmFja2dyb3VuZCIgd2lkdGg9IjQwMCUiIGhlaWdodD0iNDAwJSIgZmlsbD0icmdiYSg0MCwgNDUsIDQ3LDEpIj48L3JlY3Q+IDxwYXRoIGZpbGw9InJnYmEoNDksIDYwLCA2OCwxKSIgZD0iTSAtMTAgMzAgaCA2MCB2OCBoLTYweiBNLTEwIC0xMCBoNjAgdjggaC02MCI+PC9wYXRoPjxwYXRoIGZpbGw9InJnYmEoNDEsIDU0LCA2MSwxKSIgZD0ibSAtMTAgMjIgaCA2MCB2NCBoLTYweiBNLTEwIC0xOCBoNjAgdjQgaC02MHoiPjwvcGF0aD48L3BhdHRlcm4+ICA8L2RlZnM+IDxyZWN0IGZpbGw9InVybCgjcGF0dGVybikiIGhlaWdodD0iMTAwJSIgd2lkdGg9IjEwMCUiPjwvcmVjdD48L3N2Zz4=');
+}
+
+body,
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cflex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

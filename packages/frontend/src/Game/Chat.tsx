@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { NetworkMessage as Message } from 'common';
-import './Chat.css';
+import './Chat.scss';
 import { Connection } from '../Network';
 
 type Props = {
@@ -46,8 +46,8 @@ export const Chat: React.FunctionComponent<Props> = ({ connection }) => {
   };
 
   return (
-    <div className="chat">
-      <div className="chat-button">
+    <div className="paper chat">
+      <div className="flat-dark chat-button">
         <span>chat</span>
       </div>
 
@@ -72,7 +72,7 @@ export const Chat: React.FunctionComponent<Props> = ({ connection }) => {
         </div>
       </div>
 
-      <div className="chat-input">
+      <div className="flat-dark chat-input">
         <form onSubmit={handleSubmit}>
           <input
             type="text"

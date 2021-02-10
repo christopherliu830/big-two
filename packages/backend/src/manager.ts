@@ -1,8 +1,8 @@
-import { Server, Socket } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
-import { NetworkMessage as Message, NetworkMessage } from 'common';
-import { Session, ClientSession, FakeSession } from './session';
-import { BigTwo } from './BigTwo/BigTwo';
+import { Server, Socket } from "socket.io";
+import { v4 as uuidv4 } from "uuid";
+import { NetworkMessage as Message, NetworkMessage } from "common";
+import { Session, ClientSession, FakeSession } from "./session";
+import { BigTwo } from "./BigTwo/BigTwo";
 
 /**
  * Represents players and the socket object
@@ -12,7 +12,7 @@ export class Table {
   io: Server;
 
   private _game = new BigTwo();
-  private _ownerid: string; 
+  private _ownerid: string;
 
   get sessions() {
     return Object.values(this._tokens);
@@ -36,25 +36,28 @@ export class Table {
     const { id, name } = config;
     socket.join(this.id);
 
-
     let session: ClientSession;
     if (id in this._tokens) {
       session = this._tokens[id] as ClientSession;
-      console.log('Reconnecting', session.name, 'as', name);
+      console.log("Reconnecting", session.name, "as", name);
       session.name = config.name;
       session.color = config.color;
       session.setSocket(socket);
+      if (config.id === this._ownerid) {
+        this.hookOwner(session);
+        session.send(new NetworkMessage.SetOwner());
+      }
     } else {
       session = new ClientSession(socket, this, config);
-      console.log(session.name, 'has connected');
+      console.log(session.name, "has connected");
       this._tokens[config.id] = session;
-      session.sendSessionsList(this.sessions);
-      this.notifySessionJoin(session);
+      if (config.id === this._ownerid) {
+        this.hookOwner(session);
+        session.send(new NetworkMessage.SetOwner());
+      }
     }
 
-    if (config.id === this._ownerid) {
-      this.hookOwner(session);
-    }
+    session.sendSessionsList(this.sessions);
 
     this.notifySessionJoin(session);
   }
@@ -64,11 +67,14 @@ export class Table {
    * Right now that means we listen for their command to start the game.
    */
   hookOwner(session: Session) {
-    session.once(Message.FromClientChat.Header, (payload: NetworkMessage.FromClientChat.Payload) => {
-      if (payload.message === '/start') {
-        this.start();
+    session.once(
+      Message.FromClientChat.Header,
+      (payload: NetworkMessage.FromClientChat.Payload) => {
+        if (payload.message === "/start") {
+          this.start();
+        }
       }
-    })
+    );
   }
 
   start() {
@@ -76,8 +82,8 @@ export class Table {
       const id = uuidv4();
       const config: Message.Join.Payload = {
         id: id,
-        name: 'Bot',
-        color: 'gray',
+        name: "Bot",
+        color: "gray",
         table: this.id,
       };
       this._tokens[id] = new FakeSession(this, config);
@@ -96,8 +102,10 @@ export class Table {
       score: newSession.player.score,
     });
 
-    this.sessions.filter(s => s.id != newSession.id).forEach(session => {
-      session.send(sData);
-    })
+    this.sessions
+      .filter((s) => s.id != newSession.id)
+      .forEach((session) => {
+        session.send(sData);
+      });
   }
 }

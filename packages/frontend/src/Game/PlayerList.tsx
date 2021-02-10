@@ -1,25 +1,33 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { PlayerInfo } from '../types';
 import { NetworkMessage } from 'common';
 import { Connection } from '../Network';
 import './PlayerList.css';
 
 type Props = {
   connection: Connection;
+  onChange?(sessions: Array<NetworkMessage.SessionData.Payload>): void;
 };
 
-export const PlayerList: React.FC<Props> = ({ connection }) => {
-  const [ sessions, setSessions ] = useState<Array<NetworkMessage.SessionData.Payload>>([]);
+export const PlayerList: React.FC<Props> = ({ connection, onChange }) => {
+  const [sessions, setSessions] = useState<
+    Array<NetworkMessage.SessionData.Payload>
+  >([]);
 
   const handleSessionsData = (payload: NetworkMessage.SessionData.Payload) => {
-    setSessions(sess => {
-      if (!sess.find(s => s.id === payload.id)) {
-        return [...sess, payload];
+    setSessions((sess) => {
+      if (!sess.find((s) => s.id === payload.id)) {
+        const arr = [...sess, payload];
+        return arr;
+      } else {
+        return sess;
       }
-      else return sess;
-    })
-  }
+    });
+  };
+
+  useEffect(() => {
+    onChange && onChange(sessions);
+  }, [sessions]);
 
   useEffect(() => {
     if (connection) {
@@ -32,14 +40,17 @@ export const PlayerList: React.FC<Props> = ({ connection }) => {
   }, [connection]);
 
   return (
-    <div className="player-list">
-      <header>Players</header>
+    <div className="paper player-list">
+      {/* Todo change chat-button*/}
+      <div className="flat-dark chat-button">players</div>
       <div className="body">
         <table>
           <tbody>
-            {sessions.map(session => (
+            {sessions.map((session) => (
               <tr key={session.id}>
-                <td style={{color: session.color}}>{session.name}</td>
+                <td className="px-1" style={{ color: session.color }}>
+                  {session.name}
+                </td>
                 <td>{session.score}</td>
               </tr>
             ))}

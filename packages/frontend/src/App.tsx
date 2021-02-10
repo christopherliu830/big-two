@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { ThemeProvider } from '@material-ui/core';
-import { Game } from './Game/Game';
-import { Home } from './Home/Home';
+import { Game } from './Game';
+import { Home } from './Home';
 import { theme } from './theme';
 
 export const App: React.FC = () => {

@@ -12,7 +12,6 @@ import { InputOutput, EnvironmentEvent } from './Input';
 import { Vector3 } from 'three';
 import { CardStack } from './Stack';
 
-
 // TODO: Put this somewhere else
 const config = {
   playerPositions: {
@@ -89,6 +88,7 @@ class Environment extends InputOutput {
     canvas.onmousedown = this._handleMouseDown;
     canvas.onmousemove = this._handleMouseMove;
     canvas.onmouseup = this._handleMouseUp;
+    canvas.oncontextmenu = (event: any) => event.preventDefault();
     window.onresize = this.onResize;
 
     connection.on(Message.Type.DrawCards, this.addCards);
@@ -101,7 +101,6 @@ class Environment extends InputOutput {
     this.scene.add(CardStack.Stack);
 
     this.close = () => {
-
       this.scene.remove(CardStack.Stack);
       CardStack.destroy();
 
@@ -186,14 +185,14 @@ class Environment extends InputOutput {
     Environment.raycaster.set(origin, down);
 
     hand.playCards(...cards);
-  }
+  };
 
   beginTrick = (): void => {
     this.scene.remove(CardStack.Stack);
     CardStack.destroy();
     CardStack.create();
     this.scene.add(CardStack.Stack);
-  }
+  };
 
   updateSessions = (payload: NetworkMessage.SessionData.Payload): void => {
     const { id, name, color } = payload;
@@ -214,22 +213,21 @@ class Environment extends InputOutput {
   };
 
   private _submitWrapper = (submitFunc: Function) => {
-
     return (message: Message.Base) => {
       if (message.callback) {
         const original = message.callback;
         message.callback = (arg: boolean) => {
           this._onSubmitReturn(arg);
           original(arg);
-        }
+        };
       }
       submitFunc(message);
-    }
-  }
+    };
+  };
 
   private _onSubmitReturn = (arg: boolean) => {
     console.log('callback retunred:', arg);
-  }
+  };
 
   private _handleMouseMove = (event: MouseEvent) => {
     const { clientWidth: w, clientHeight: h } = this.renderer.domElement;
@@ -273,7 +271,7 @@ class Environment extends InputOutput {
     this.renderer = new THREE.WebGLRenderer({ canvas: el });
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.setClearColor(0xa8caff);
+    this.renderer.setClearColor(0x477148);
 
     this.scene = new THREE.Scene();
 
@@ -353,7 +351,6 @@ class Environment extends InputOutput {
     TWEEN.update(time);
     this.composer.render();
   };
-
 }
 
 export { Environment };

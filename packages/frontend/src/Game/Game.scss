@@ -1,0 +1,54 @@
+canvas {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.game-row {
+  align-items: stretch;
+}
+
+.container {
+  flex-basis: 1 1 100%;
+  height: 100vh;
+  align-items: center;
+  display: flex;
+}
+
+.main-window {
+  flex: 1 1 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.game {
+  flex: 1 1 100%;
+  overflow-y: hidden;
+  display: flex;
+}
+
+#info {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  text-align: center;
+  z-index: 100;
+  display: block;
+}
+
+.navbar {
+  background: var(--c0);
+  color: var(--c9);
+}
+
+.connecting-box {
+  height: 100%;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--c9);
+  text-align: center;
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -39,6 +39,8 @@ export class HandAvatar extends THREE.Group {
 
   private _inputsEnabled: boolean;
 
+  private _grabbing: boolean = false;
+
   constructor(id: string, local: boolean, input: InputOutput) {
     super();
     this.playerId = id;
@@ -132,17 +134,18 @@ export class HandAvatar extends THREE.Group {
     event: MouseEvent;
     hit: RaycastHit;
   }) {
-    if (event.button === 2) {
-      if (
-        hit && hit.object instanceof CardAvatar &&
-        this.children.includes(hit.object)
-      ) {
-        if (this._selected.has(hit.object)) {
-          this.select(hit.object, false);
-        } else {
-          this.select(hit.object, true);
-        }
+    if (
+      hit && hit.object instanceof CardAvatar &&
+      this.children.includes(hit.object)
+    ) {
+      if (this._selected.has(hit.object)) {
+        this.select(hit.object, false);
+      } else {
+        this.select(hit.object, true);
       }
+    }
+    else {
+      this._grabbing = true;
     }
   }
 
@@ -157,10 +160,11 @@ export class HandAvatar extends THREE.Group {
         this.spread();
       }
     }
+    this._grabbing = false;
   }
 
   private _handleMouseMove({ hit }: { hit: RaycastHit }) {
-    if (this._input.mouseDown === 0) {
+    if (this._grabbing) {
       this._selected.forEach((s) => {
         const p = s.parent;
         s.parent?.remove(s);

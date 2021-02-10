@@ -13,7 +13,7 @@ import {
 } from '@material-ui/core';
 import { useHistory } from 'react-router-dom';
 import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
-import { API_URL } from '../config';
+import { API_URL, PLAYER_ID } from '../config';
 
 
 type Props = {
@@ -89,6 +89,7 @@ export const GameOptionsForm: React.FC<Props> = ({ className }) => {
         rounds: rounds.toString(),
         winCondition: winCondition,
         hidden: hidden.toString(),
+        owner: PLAYER_ID,
       }),
     };
     fetch(API_URL + '/create-room', options)

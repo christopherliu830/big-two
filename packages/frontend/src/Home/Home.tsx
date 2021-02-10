@@ -6,7 +6,6 @@ import { GameOptionsForm } from './GameOptionsForm';
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     container: {
-      backgroundColor: '#ccccff',
       height: '100%',
       display: 'flex',
       alignItems: 'center',
@@ -66,7 +65,6 @@ export const Home: React.FC = () => {
       <Grid item xs={4}>
         <Paper elevation={4} className={classes.wrapper}>
           <div ref={ref} className={classes.panel}>
-
             <Box
               textAlign="center"
               p="1em"
@@ -75,7 +73,7 @@ export const Home: React.FC = () => {
               justifyContent="end"
               className={classes.panelItem}
             >
-              <h1 style={{marginBottom: 'auto'}}>Large Two</h1>
+              <h1 style={{ marginBottom: 'auto' }}>Large Two</h1>
               <Button className={classes.primary} onClick={handleClick}>
                 Create a room
               </Button>
@@ -83,7 +81,6 @@ export const Home: React.FC = () => {
             </Box>
 
             <GameOptionsForm className={classes.panelItem} />
-
           </div>
         </Paper>
       </Grid>

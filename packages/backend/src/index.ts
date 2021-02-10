@@ -25,6 +25,7 @@ app.use(express.urlencoded());
 
 const tables: Record<string, Table> = {};
 app.post("/create-room", (req: Request, res: Response) => {
+  // TODO: add support for these haha
   const { winCondition, rounds, hidden, owner } = req.body;
   const tableId = (Math.random().toString(36) + "00000000").slice(2, 10);
   tables[tableId] = new Table(io, tableId, owner);
