@@ -16,7 +16,7 @@ import { CardStack } from './Stack';
 const config = {
   playerPositions: {
     me: {
-      position: new THREE.Vector3(0, 0, 2.5),
+      position: new THREE.Vector3(0, 0, 1.5),
       rotation: new THREE.Euler(0, 0, 0),
     },
     others: [
@@ -195,12 +195,12 @@ class Environment extends InputOutput {
   };
 
   updateSessions = (payload: NetworkMessage.SessionData.Payload): void => {
-    const { id, name, color } = payload;
+    const { id, name, color } = payload.player;
     if (!this._players[id]) {
       const len = Object.values(this._players).filter((p) => !p.local).length;
       this._players[id] = this._createHand(id, name, len, false, color);
     } else {
-      this._players[id].name = payload.name;
+      this._players[id].name = name;
     }
   };
 
@@ -268,7 +268,7 @@ class Environment extends InputOutput {
   };
 
   private _initScene = (el?: HTMLCanvasElement) => {
-    this.renderer = new THREE.WebGLRenderer({ canvas: el });
+    this.renderer = new THREE.WebGLRenderer({ canvas: el, antialias: true });
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor(0x477148);
@@ -276,11 +276,11 @@ class Environment extends InputOutput {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(75, 999, 0.1, 1000);
-    this.camera.position.set(0, 5, 0);
+    this.camera.position.set(0, 3, 0);
     this.camera.lookAt(0, 0, 0);
 
-    const light = new THREE.DirectionalLight(0xffffff, 0.5);
-    light.position.set(300, 2000, -1000);
+    const light = new THREE.DirectionalLight(0xffffff, 0.9);
+    light.position.set(400, 3000, -400);
     light.castShadow = true;
     light.shadow.camera.top = 5;
     light.shadow.camera.bottom = -5;
@@ -292,7 +292,7 @@ class Environment extends InputOutput {
     light.shadow.bias = 0.0000037;
     this.scene.add(light);
 
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.1));
 
     const table = new THREE.Mesh(
       new THREE.PlaneGeometry(10, 10, 1, 1),
@@ -310,14 +310,14 @@ class Environment extends InputOutput {
     this.onResize();
 
     // this.addLocalPlayer('1', '2', 'black');
-    // const hand = this._createHand('1', 'pee', 0, false, 'black');
-    // const card =  CardAvatar.Create(this, 1, 1, '1', 0);
-    // const card1 =  CardAvatar.Create(this, 1, 1, '2', 0);
-    // const card2 =  CardAvatar.Create(this, 1, 1, '3', 0);
-    // const card3 =  CardAvatar.Create(this, 1, 1, '4', 0);
-    // const card4 =  CardAvatar.Create(this, 1, 1, '5', 0);
-    // const card5 =  CardAvatar.Create(this, 1, 1, '6', 0);
-    // const card6 =  CardAvatar.Create(this, 1, 1, '7', 0);
+    // const hand = this._createHand('1', 'pee', 0, true, 'black');
+    // const card = CardAvatar.Create(this, 1, 1, '1', 0);
+    // const card1 = CardAvatar.Create(this, 1, 1, '2', 0);
+    // const card2 = CardAvatar.Create(this, 1, 1, '3', 0);
+    // const card3 = CardAvatar.Create(this, 1, 1, '4', 0);
+    // const card4 = CardAvatar.Create(this, 1, 1, '5', 0);
+    // const card5 = CardAvatar.Create(this, 1, 1, '6', 0);
+    // const card6 = CardAvatar.Create(this, 1, 1, '7', 0);
     // hand.addCard(card);
     // hand.addCard(card1);
     // hand.addCard(card2);
@@ -327,11 +327,11 @@ class Environment extends InputOutput {
     // hand.addCard(card6);
     // setTimeout(() => {
     //   hand.playCards(
-    //     {suit: 1, value: 1, netId: '1'},
-    //     {suit: 1, value: 1, netId: '4'},
-    //     {suit: 1, value: 1, netId: '5'},
+    //     { suit: 1, value: 1, netId: '1' },
+    //     { suit: 1, value: 1, netId: '4' },
+    //     { suit: 1, value: 1, netId: '5' }
     //   );
-    // }, 1500)
+    // }, 1500);
 
     requestAnimationFrame(this.animate);
   };

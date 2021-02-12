@@ -13,7 +13,7 @@ const config = {
   rotationScaling: -0.3,
   arc: {
     remote: 0.42,
-    local: 1.7,
+    local: 1.3,
   },
 };
 
@@ -59,7 +59,6 @@ export class HandAvatar extends THREE.Group {
       this.arc = config.arc.remote;
       this.spreadScaling = config.spread.remote;
     }
-
   }
 
   addCard(...cards: CardAvatar[]): void {
@@ -86,7 +85,7 @@ export class HandAvatar extends THREE.Group {
 
   playCards = (...cards: Card.Card[]): void => {
     const avatars: CardAvatar[] = [];
-    cards.forEach(toPlay => {
+    cards.forEach((toPlay) => {
       const avatar = this.cards.find((c) => toPlay.netId === c.netId);
       console.log(avatar.position.x);
       if (!avatar) throw Error('Did not have card');
@@ -94,10 +93,10 @@ export class HandAvatar extends THREE.Group {
       avatar.disableInteraction();
       this.removeCard(avatar);
       avatars.push(avatar);
-    })
+    });
 
     CardStack.Stack.add(...avatars);
-  }
+  };
 
   select = (card: CardAvatar, selected: boolean): void => {
     if (selected) {
@@ -135,7 +134,8 @@ export class HandAvatar extends THREE.Group {
     hit: RaycastHit;
   }) {
     if (
-      hit && hit.object instanceof CardAvatar &&
+      hit &&
+      hit.object instanceof CardAvatar &&
       this.children.includes(hit.object)
     ) {
       if (this._selected.has(hit.object)) {
@@ -143,13 +143,18 @@ export class HandAvatar extends THREE.Group {
       } else {
         this.select(hit.object, true);
       }
-    }
-    else {
+    } else {
       this._grabbing = true;
     }
   }
 
-  private _handleMouseUp({ event, hit }: { event: MouseEvent, hit: RaycastHit }): void {
+  private _handleMouseUp({
+    event,
+    hit,
+  }: {
+    event: MouseEvent;
+    hit: RaycastHit;
+  }): void {
     if (event.button === 0) {
       // ghetto
 
@@ -182,7 +187,6 @@ export class HandAvatar extends THREE.Group {
     this._selected.forEach((card) => {
       cards.push({ suit: card.suit, value: card.value, netId: card.netId });
     });
-    // this._canSelect = false;
     this.disableInputs();
     this._selected = new Set();
 
@@ -196,17 +200,9 @@ export class HandAvatar extends THREE.Group {
       this._selected = selectedCards;
 
       if (succeeded) {
-        // selectedCards.forEach((card) => {
-        //   // Weird positioning stuff means you have to do this
-        //   card.getWorldPosition(card.position);
-        //   card.disableInteraction();
-        //   this.removeCard(card);
-        //   CardStack.Stack.add(card);
-        //   this.playCards()
-        // });
         this.spreadInstant();
         this.playCards(...selectedCards);
-      } 
+      }
       this.spread();
     };
 

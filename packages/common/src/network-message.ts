@@ -1,9 +1,9 @@
-import { GameAction } from './actions';
-import { Message } from './message';
+import { GameAction } from "./actions";
+import { Message } from "./message";
 
 export namespace NetworkMessage {
-
   export const Type = Message.Type;
+  export type PlayerData = Message.PlayerData;
 
   /**
    * Request to join a table message.
@@ -15,13 +15,10 @@ export namespace NetworkMessage {
   export namespace Join {
     export const Header = Message.Type.Join;
     export interface Payload {
-      id: string;
+      player: Message.PlayerData;
       table: string;
-      name: string;
-      color: string;
     }
   }
-
 
   /**
    * Used by server to send a chat to a client.
@@ -30,15 +27,16 @@ export namespace NetworkMessage {
     header = Chat.Header;
     payload: Chat.Payload;
 
-    constructor(payload: Chat.Payload) { super(payload) };
+    constructor(payload: Chat.Payload) {
+      super(payload);
+    }
   }
   export namespace Chat {
     export const Header = Message.Type.ServerChat;
     export interface Payload {
-      sender: string; // The name of the sender!
       key: string;
+      player: Message.PlayerData;
       message: string;
-      color: string;
     }
   }
 
@@ -48,8 +46,10 @@ export namespace NetworkMessage {
   export class FromClientChat extends Message.Base {
     header = FromClientChat.Header;
     payload: FromClientChat.Payload;
-    
-    constructor(payload: FromClientChat.Payload) { super(payload); }
+
+    constructor(payload: FromClientChat.Payload) {
+      super(payload);
+    }
   }
   export namespace FromClientChat {
     export const Header = Message.Type.ClientChat;
@@ -65,26 +65,26 @@ export namespace NetworkMessage {
     header = SessionData.Header;
     payload: SessionData.Payload;
 
-    filter = () => {}
+    filter = () => {};
 
-    constructor(payload: SessionData.Payload) { super(payload); }
+    constructor(payload: SessionData.Payload) {
+      super(payload);
+    }
   }
   export namespace SessionData {
     export const Header = Message.Type.SessionsData;
     export interface Payload {
-      id: string;
-      name: string;
-      color?: string;
+      player: Message.PlayerData;
       score?: number;
     }
   }
 
   export class BroadcastData extends Message.Base {
-    header = Message.Type.BroadcastData
+    header = Message.Type.BroadcastData;
     payload: {};
   }
   export namespace BroadcastData {
-    export interface Payload extends Message.Payload { }
+    export interface Payload extends Message.Payload {}
   }
 
   export class BeginTrick extends Message.Base {
@@ -93,7 +93,9 @@ export namespace NetworkMessage {
 
     filter = () => this;
 
-    constructor() { super({}); }
+    constructor() {
+      super({});
+    }
   }
   export namespace BeginTrick {
     export const Type = Message.Type.BeginTrick;
@@ -105,7 +107,9 @@ export namespace NetworkMessage {
 
     filter = () => this;
 
-    constructor() { super({}); }
+    constructor() {
+      super({});
+    }
   }
   export namespace GameStart {
     export const Type = Message.Type.GameStart;
@@ -113,14 +117,28 @@ export namespace NetworkMessage {
 
   export class SetOwner extends Message.Base {
     header = SetOwner.Type;
-    payload = {};
+    payload: Message.PlayerData;
 
     filter = () => this;
 
-    constructor() { super({}); }
+    constructor(p: Message.PlayerData) {
+      super(p);
+    }
   }
   export namespace SetOwner {
     export const Type = Message.Type.SetOwner;
   }
-  
+
+  export class SetTurn extends Message.Base {
+    header = SetTurn.Type;
+    payload: Message.PlayerData;
+
+    constructor(p: SetTurn.Payload) {
+      super(p);
+    }
+  }
+  export namespace SetTurn {
+    export const Type = Message.Type.SetTurn;
+    export type Payload = Message.PlayerData;
+  }
 }

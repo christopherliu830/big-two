@@ -16,7 +16,7 @@ export const PlayerList: React.FC<Props> = ({ connection, onChange }) => {
 
   const handleSessionsData = (payload: NetworkMessage.SessionData.Payload) => {
     setSessions((sess) => {
-      if (!sess.find((s) => s.id === payload.id)) {
+      if (!sess.find((s) => s.player.id === payload.player.id)) {
         const arr = [...sess, payload];
         return arr;
       } else {
@@ -46,14 +46,16 @@ export const PlayerList: React.FC<Props> = ({ connection, onChange }) => {
       <div className="body">
         <table>
           <tbody>
-            {sessions.map((session) => (
-              <tr key={session.id}>
-                <td className="px-1" style={{ color: session.color }}>
-                  {session.name}
+            {sessions.map((session) => {
+              const { id, name, color } = session.player;
+              const { score } = session;
+              <tr key={id}>
+                <td className="px-1" style={{ color }}>
+                  {name}
                 </td>
-                <td>{session.score}</td>
-              </tr>
-            ))}
+                <td>{score}</td>
+              </tr>;
+            })}
           </tbody>
         </table>
       </div>

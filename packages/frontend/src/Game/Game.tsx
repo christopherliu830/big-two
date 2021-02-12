@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, ButtonGroup } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
-import { NetworkMessage as Message, NetworkMessage } from 'common';
+import { NetworkMessage } from 'common';
 import { PLAYER_ID } from '../config';
 import { Chat } from './Chat';
 import { PlayerList } from './PlayerList';
@@ -17,7 +17,8 @@ export const Game: React.FC = () => {
   const [inSetup, setSetup] = useState(false);
   const [environment, setEnvironment] = useState(null);
   const [connection, setConnection] = useState(null);
-  const [owner, setOwner] = useState(false);
+  const [owner, setOwner] = useState(null);
+  const [currentActing, setCurrentActing] = useState(null);
   const [lenPlayers, setLenPlayers] = useState(1);
   const ref = React.useRef<HTMLDivElement>();
   const params = useParams<{ table: string }>();
@@ -39,10 +40,21 @@ export const Game: React.FC = () => {
     environment && environment.onResize();
   });
 
-  const initialize = (c: Connection, config: Message.Join.Payload) => {
+  useEffect(() => {
+    if (connection) {
+      connection.once(NetworkMessage.SetOwner.Type, (p: any) => setOwner(p));
+      connection.on(NetworkMessage.SetTurn.Type, setCurrentActing);
+      return () => {
+        connection.off(NetworkMessage.SetTurn.Type, setCurrentActing);
+      };
+    }
+  }, [connection]);
+
+  const initialize = (c: Connection, config: NetworkMessage.Join.Payload) => {
+    const { id, name, color } = config.player;
     const env = new Environment(c);
     ref.current.appendChild(env.renderer.domElement);
-    env.addLocalPlayer(config.id, config.name, config.color);
+    env.addLocalPlayer(id, name, color);
     env.onResize();
     setEnvironment(env);
   };
@@ -55,16 +67,13 @@ export const Game: React.FC = () => {
     if (!name || !color) return;
     setSetup(false);
 
-    const payload: Message.Join.Payload = {
-      name,
-      color,
-      id,
+    const payload: NetworkMessage.Join.Payload = {
+      player: { name, color, id },
       table: params.table,
     };
-    const config = new Message.Join(payload);
+    const config = new NetworkMessage.Join(payload);
     const c = new Connection(SOCKET_URL, config);
-    c.once(Message.Type.Connect, () => initialize(c, payload));
-    c.once(Message.Type.SetOwner, () => setOwner(true));
+    c.once(NetworkMessage.Type.Connect, () => initialize(c, payload));
     setConnection(c);
   };
 
@@ -86,7 +95,7 @@ export const Game: React.FC = () => {
 
   return (
     <>
-      <Container fluid className="container">
+      <Container fluid="xl" className="game-container">
         <Row className="h-75 w-100 my-auto align-items-stretch">
           <Col className="d-flex flex-column h-100" xl={2}>
             <PlayerList
@@ -99,7 +108,8 @@ export const Game: React.FC = () => {
             <div className="game" ref={ref}></div>
             <CommandGroup
               owner={owner}
-              started={false}
+              started={currentActing !== null}
+              currentActor={currentActing}
               lenPlayers={lenPlayers}
               onStart={handleStart}
               onPass={handlePass}

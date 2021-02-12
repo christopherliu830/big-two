@@ -134,8 +134,14 @@ export class BigTwo {
   private _incrementTurn() {
     this._turnIndex = (this._turnIndex + 1) % this._sessions.length;
     this._sessions.forEach((s) => {
-      s.sendSystemChat(
-        `It is now ${this._sessions[this._turnIndex].name}'s turn.`
+      const player = this._sessions[this._turnIndex];
+      s.sendSystemChat(`It is now ${player.name}'s turn.`);
+      s.send(
+        new NetworkMessage.SetTurn({
+          id: player.id,
+          name: player.name,
+          color: player.color,
+        })
       );
     });
   }

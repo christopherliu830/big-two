@@ -13,8 +13,9 @@ export class Table {
 
   private _game = new BigTwo();
   private _ownerid: string;
+  private _owner?: Session;
 
-  get sessions() {
+  get sessions(): Session[] {
     return Object.values(this._tokens);
   }
 
@@ -32,29 +33,34 @@ export class Table {
     this._ownerid = ownerid;
   }
 
-  join(socket: Socket, config: Message.Join.Payload) {
-    const { id, name } = config;
+  join(socket: Socket, config: Message.Join.Payload): void {
+    const { id, name, color } = config.player;
     socket.join(this.id);
 
     let session: ClientSession;
     if (id in this._tokens) {
       session = this._tokens[id] as ClientSession;
       console.log("Reconnecting", session.name, "as", name);
-      session.name = config.name;
-      session.color = config.color;
+      session.name = name;
+      session.color = color;
       session.setSocket(socket);
-      if (config.id === this._ownerid) {
-        this.hookOwner(session);
-        session.send(new NetworkMessage.SetOwner());
-      }
     } else {
       session = new ClientSession(socket, this, config);
       console.log(session.name, "has connected");
-      this._tokens[config.id] = session;
-      if (config.id === this._ownerid) {
-        this.hookOwner(session);
-        session.send(new NetworkMessage.SetOwner());
+      this._tokens[id] = session;
+      if (id === this._ownerid) {
+        this.setOwner(session);
       }
+    }
+
+    if (this._owner) {
+      session.send(
+        new NetworkMessage.SetOwner({
+          id: this._owner.id,
+          name: this._owner.name,
+          color: this._owner.color,
+        })
+      );
     }
 
     session.sendSessionsList(this.sessions);
@@ -66,7 +72,8 @@ export class Table {
    * Give the first person to join owner privileges.
    * Right now that means we listen for their command to start the game.
    */
-  hookOwner(session: Session) {
+  setOwner(session: Session): void {
+    this._owner = session;
     session.once(
       Message.FromClientChat.Header,
       (payload: NetworkMessage.FromClientChat.Payload) => {
@@ -77,13 +84,15 @@ export class Table {
     );
   }
 
-  start() {
+  start(): void {
     while (this.sessions.length < 2) {
       const id = uuidv4();
       const config: Message.Join.Payload = {
-        id: id,
-        name: "Bot",
-        color: "gray",
+        player: {
+          id: id,
+          name: "Bot",
+          color: "gray",
+        },
         table: this.id,
       };
       this._tokens[id] = new FakeSession(this, config);
@@ -94,11 +103,13 @@ export class Table {
   /**
    * Resend lobby data to connected sessions.
    */
-  notifySessionJoin(newSession: Session) {
+  notifySessionJoin(newSession: Session): void {
     const sData = new Message.SessionData({
-      id: newSession.id,
-      name: newSession.name,
-      color: newSession.color,
+      player: {
+        id: newSession.id,
+        name: newSession.name,
+        color: newSession.color,
+      },
       score: newSession.player.score,
     });
 

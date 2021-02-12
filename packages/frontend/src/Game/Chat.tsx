@@ -58,12 +58,13 @@ export const Chat: React.FunctionComponent<Props> = ({ connection }) => {
             <div className="message">Connecting...</div>
           </div>
           {messages.map((m) => {
-            const { key, sender, message, color } = m;
+            const { key, message } = m;
+            const { name, color } = m.player;
 
             return (
               <div className="message-block" key={key}>
                 <div className="message-header" style={{ color }}>
-                  <b>{sender}</b>
+                  <b>{name}</b>
                 </div>
                 <div className="message">{message}</div>
               </div>

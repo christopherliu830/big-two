@@ -1,16 +1,20 @@
 import React from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
+import { NetworkMessage } from 'common';
+import { PLAYER_ID } from '../config';
 
 type Props = {
-  owner?: boolean;
+  owner?: NetworkMessage.PlayerData;
   started?: boolean;
   lenPlayers: number;
+  currentActor: NetworkMessage.SetTurn.Payload;
   onStart?(): void;
   onPass?(): void;
 };
 
 export const CommandGroup: React.FC<Props> = (props) => {
-  if (props.owner) return <CommandGroupOwner {...props} />;
+  if (props.owner && props.owner.id === PLAYER_ID)
+    return <CommandGroupOwner {...props} />;
   else return <CommandGroupMember {...props} />;
 };
 
@@ -44,12 +48,12 @@ const CommandGroupOwner: React.FC<Props> = ({
   );
 };
 
-const CommandGroupMember: React.FC<Props> = ({ started, lenPlayers }) => {
+const CommandGroupMember: React.FC<Props> = ({ started, owner }) => {
   if (!started) {
     return (
       <StyledButtonGroup>
         <Button variant="secondary" bsPrefix="btn-styled" disabled>
-          Waiting...
+          Waiting for {owner && owner.name}...
         </Button>
       </StyledButtonGroup>
     );
