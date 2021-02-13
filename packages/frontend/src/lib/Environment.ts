@@ -91,10 +91,11 @@ class Environment extends InputOutput {
     canvas.oncontextmenu = (event: any) => event.preventDefault();
     window.onresize = this.onResize;
 
-    connection.on(Message.Type.DrawCards, this.addCards);
-    connection.on(Message.Type.SessionsData, this.updateSessions);
-    connection.on(Message.Type.PlayCards, this.playCards);
-    connection.on(Message.Type.BeginTrick, this.beginTrick);
+    connection.on(GameAction.DrawCards.Type, this.addCards);
+    connection.on(NetworkMessage.SessionData.Type, this.updateSessions);
+    connection.on(GameAction.PlayCards.Type, this.playCards);
+    connection.on(NetworkMessage.BeginTrick.Type, this.beginTrick);
+    connection.on(GameAction.ClearHand.Type, this.clearHand);
     this.submit = this._submitWrapper(connection.send.bind(connection));
 
     CardStack.create();
@@ -192,6 +193,11 @@ class Environment extends InputOutput {
     CardStack.destroy();
     CardStack.create();
     this.scene.add(CardStack.Stack);
+  };
+
+  clearHand = (payload: GameAction.ClearHand.Payload): void => {
+    const hand = this._players[payload.id];
+    hand.removeCard(...hand.cards);
   };
 
   updateSessions = (payload: NetworkMessage.SessionData.Payload): void => {

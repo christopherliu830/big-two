@@ -1,9 +1,8 @@
-import { NetworkMessage, Message } from "common";
-import { Socket } from "socket.io";
-import { Table } from "./manager";
-import { v4 as uuid } from "uuid";
-import Player from "./player";
-import * as Emitter from "component-emitter";
+import { NetworkMessage, Message } from 'common';
+import { Socket } from 'socket.io';
+import { Table } from './manager';
+import { v4 as uuid } from 'uuid';
+import * as Emitter from 'component-emitter';
 
 /**
  * Use a session to associate a connected client to a socket.
@@ -15,18 +14,26 @@ export abstract class Session extends Emitter {
    * The player uuid that represents this session
    */
   id: string;
-
   table: Table;
   name: string;
   color: string;
 
-  /**
-   * The game-state object
-   */
-  player: Player;
+  get sessionMessage(): NetworkMessage.SessionData {
+    return new NetworkMessage.SessionData({
+      player: {
+        id: this.id,
+        name: this.name,
+        color: this.color,
+      },
+      score: this.score,
+    });
+  }
 
+  abstract get score(): number;
+  abstract set score(value: number);
   abstract connected: boolean;
   abstract send(message: Message.Base): void;
+  abstract close(): void;
   abstract sendSessionsList(sessions: Session[]): void;
   abstract sendSystemChat(chat: string): void;
   abstract broadcast(message: Message.Base): void;
@@ -39,7 +46,10 @@ export abstract class Session extends Emitter {
     this.name = name;
     this.color = color;
     this.table = table;
-    this.player = new Player();
+  }
+
+  sendAll(message: Message.Base): void {
+    this.table.io.emit(message.header, message.payload);
   }
 }
 
@@ -48,22 +58,14 @@ export class ClientSession extends Session {
     return this._socket.connected;
   }
   private _socket!: Socket;
+  private _score = 0;
 
-  setSocket(socket: Socket): void {
-    if (this._socket && this._socket.id === socket.id) {
-      console.log(this.name, ": reusing socket");
-      return;
-    }
-
-    this._socket = socket;
-
-    // Forward our socket events
-    this._socket.onAny((event: Message.Type, ...args: unknown[]) => {
-      this.emit(event, ...args);
-      console.log(this.name, "\n", JSON.stringify(args), "\n");
-    });
-
-    this.emit(Message.Type.Connect);
+  get score(): number {
+    return this._score;
+  }
+  set score(value: number) {
+    this._score = value;
+    this.sendAll(this.sessionMessage);
   }
 
   constructor(
@@ -76,20 +78,43 @@ export class ClientSession extends Session {
     socket && this.setSocket(socket);
 
     this.on(Message.Type.ClientChat, this._handleIncomingChat);
-    this.on(Message.Type.Disconnect, this._handleDisconnect);
   }
 
-  _handleDisconnect = (reason: string): void => {
+  setSocket(socket: Socket): void {
+    if (this._socket && this._socket.id === socket.id) {
+      console.log(this.name, ': reusing socket');
+      return;
+    }
+
+    this._socket = socket;
+
+    // Forward our socket events
+    this._socket.onAny((event: Message.Type, ...args: unknown[]) => {
+      this.emit(event, ...args);
+      console.log(this.name, '\n', JSON.stringify(args), '\n');
+    });
+    this._socket.on(Message.Type.Disconnect, this._handleDisconnect);
+
+    this.emit(Message.Type.Connect);
+  }
+
+  private _handleDisconnect = (reason: string): void => {
     console.log(`${this.name} has disconnected. Reason: ${reason}`);
+    this.table.onDisconnect(this);
     this.table.notifySessionJoin(this);
   };
+
+  close(): void {
+    this._socket.disconnect();
+  }
 
   /**
    * Send a message to this player
    * @param message the message to send.
    */
   send(message: Message.Base): void {
-    console.log("emitting", message.header, "to", this.name);
+    if (!message.header) throw Error('No Message Header');
+    console.log('emitting', message.header, 'to', this.name);
     this._socket.emit(message.header, message.payload);
   }
 
@@ -116,7 +141,7 @@ export class ClientSession extends Session {
           name: toSend.name,
           color: toSend.color,
         },
-        score: toSend.player.score,
+        score: toSend.score,
       });
       this.send(sessionData);
     });
@@ -131,9 +156,9 @@ export class ClientSession extends Session {
       key: uuid(),
       message: chat,
       player: {
-        id: "System",
-        color: "gray",
-        name: "System",
+        id: 'System',
+        color: 'gray',
+        name: 'System',
       },
     });
     this._socket.emit(message.header, message.payload);
@@ -145,7 +170,7 @@ export class ClientSession extends Session {
   private _handleIncomingChat(
     payload: NetworkMessage.FromClientChat.Payload
   ): void {
-    if (payload.message[0] === "/") {
+    if (payload.message[0] === '/') {
       // Ignore command messages
       return;
     }
@@ -160,41 +185,46 @@ export class ClientSession extends Session {
     });
     this.table.io.emit(message.header, message.payload);
   }
-
-  /**
-   * Forward any kind of data to everyone else.
-   * @param payload The object to be broadcasted
-   */
-  private _handleBroadcastObject(
-    payload: NetworkMessage.BroadcastData.Payload
-  ) {
-    const message = new NetworkMessage.BroadcastData(payload);
-    this._socket
-      .to(this.table.id)
-      .broadcast.emit(message.header, message.payload);
-  }
 }
 
 /**
  * A fake session for bots
  */
 export class FakeSession extends Session {
+  private _score = 0;
+  private _connected = true;
+
   get connected(): boolean {
-    return true;
+    return this._connected;
   }
+
+  get score(): number {
+    return this._score;
+  }
+  set score(value: number) {
+    this._score = value;
+    this.sendAll(this.sessionMessage);
+  }
+
   constructor(table: Table, config: NetworkMessage.Join.Payload) {
     super(table, config);
+  }
+
+  close(): void {
+    this._connected = false;
+    this.table.onDisconnect(this);
   }
 
   send(): void {
     return;
   }
+
   sendSessionsList(): void {
     return;
   }
 
   sendSystemChat(message: string): void {
-    console.log(this.name, "received:", message);
+    console.log(this.name, 'received:', message);
   }
 
   broadcast(message: Message.Base): void {

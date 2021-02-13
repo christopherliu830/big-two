@@ -37,6 +37,7 @@ export namespace Message {
 
     // Game Actions
     PlayCards = "PLAY_CARDS",
+    ClearHand = "CLEAR_HAND",
     Pass = "PASS",
     DrawCards = "DRAW_CARDS",
     BeginTrick = "BEGIN_TRICK",

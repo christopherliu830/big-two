@@ -15,12 +15,15 @@ export const PlayerList: React.FC<Props> = ({ connection, onChange }) => {
   >([]);
 
   const handleSessionsData = (payload: NetworkMessage.SessionData.Payload) => {
-    setSessions((sess) => {
-      if (!sess.find((s) => s.player.id === payload.player.id)) {
-        const arr = [...sess, payload];
-        return arr;
+    setSessions((current) => {
+      const found = current.find((s) => s.player.id === payload.player.id);
+      if (!found) {
+        return [...current, payload];
       } else {
-        return sess;
+        const index = current.indexOf(found);
+        const copy = [...current];
+        copy[index] = payload;
+        return copy;
       }
     });
   };
@@ -49,12 +52,14 @@ export const PlayerList: React.FC<Props> = ({ connection, onChange }) => {
             {sessions.map((session) => {
               const { id, name, color } = session.player;
               const { score } = session;
-              <tr key={id}>
-                <td className="px-1" style={{ color }}>
-                  {name}
-                </td>
-                <td>{score}</td>
-              </tr>;
+              return (
+                <tr key={id}>
+                  <td className="px-1" style={{ color }}>
+                    {name}
+                  </td>
+                  <td>{score}</td>
+                </tr>
+              );
             })}
           </tbody>
         </table>

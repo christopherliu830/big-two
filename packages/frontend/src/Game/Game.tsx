@@ -73,7 +73,10 @@ export const Game: React.FC = () => {
     };
     const config = new NetworkMessage.Join(payload);
     const c = new Connection(SOCKET_URL, config);
-    c.once(NetworkMessage.Type.Connect, () => initialize(c, payload));
+
+    // We're in an open lobby if we receive session data
+    c.once(NetworkMessage.SessionData.Type, () => initialize(c, payload));
+
     setConnection(c);
   };
 
@@ -108,8 +111,7 @@ export const Game: React.FC = () => {
             <div className="game" ref={ref}></div>
             <CommandGroup
               owner={owner}
-              started={currentActing !== null}
-              currentActor={currentActing}
+              current={currentActing}
               lenPlayers={lenPlayers}
               onStart={handleStart}
               onPass={handlePass}

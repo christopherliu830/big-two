@@ -62,7 +62,7 @@ export namespace NetworkMessage {
    * Server sends this to update the connected sessions.
    */
   export class SessionData extends Message.Base {
-    header = SessionData.Header;
+    header = SessionData.Type;
     payload: SessionData.Payload;
 
     filter = () => {};
@@ -72,7 +72,7 @@ export namespace NetworkMessage {
     }
   }
   export namespace SessionData {
-    export const Header = Message.Type.SessionsData;
+    export const Type = Message.Type.SessionsData;
     export interface Payload {
       player: Message.PlayerData;
       score?: number;

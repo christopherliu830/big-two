@@ -1,8 +1,7 @@
-import { Card } from './card';
-import { Message } from './message';
+import { Card } from "./card";
+import { Message } from "./message";
 
 export namespace GameAction {
-
   export interface GameAction extends Message.Base {
     header: Message.Type;
     payload: GameAction.Payload;
@@ -66,5 +65,17 @@ export namespace GameAction {
     }
   }
 
+  export class ClearHand implements GameAction {
+    header = ClearHand.Type;
+    payload: GameAction.Payload;
 
+    constructor(payload: GameAction.Payload) {
+      this.payload = payload;
+    }
+    filter = () => this;
+  }
+  export namespace ClearHand {
+    export const Type = Message.Type.ClearHand;
+    export type Payload = GameAction.Payload;
+  }
 }

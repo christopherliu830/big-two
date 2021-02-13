@@ -1,5 +1,8 @@
-import { Session } from "../session";
-import { Card, Message, GameAction, NetworkMessage } from "common";
+import { Session } from '../session';
+import { Card, Message, GameAction, NetworkMessage } from 'common';
+
+const roundRestartDelay = 2000;
+const placementMsgs = ['1st', '2nd', '3rd', '4th'];
 
 export class BigTwo {
   /**
@@ -11,27 +14,59 @@ export class BigTwo {
   private _history: GameAction.GameAction[] = [];
   private _hands: Record<string, Card.Card[]> = {};
   private _top: Card.Card[] = [];
-
   private _turnIndex = 0;
+  private _currentWinScore = 0;
   private _passInRow = 0;
+  private _round = 0;
+  private _restarting = false;
+  private _maxRounds = 1;
+
+  constructor({ maxRounds }: { maxRounds?: number }) {
+    this._maxRounds = maxRounds || 1;
+  }
 
   start(sessions: Session[]): void {
+    if (this._round > 0) return;
     this._sessions = sessions;
-    const deck = Card.deck();
-    Card.shuffle(deck);
 
     sessions.forEach((session) => {
-      this._hands[session.id] = [];
       session.sendSessionsList(this._sessions);
-
-      const cards = deck.splice(0, 13);
-      cards.sort(Card.compare);
-      this._drawCards(session, cards);
-
       session.on(Message.Type.PlayCards, this._handlePlayCards(session));
       session.on(Message.Type.Connect, () => this.resendHistory(session));
       session.on(Message.Type.ClientChat, this._handlePass(session));
     });
+
+    this.restart();
+  }
+
+  restart(): void {
+    this._round++;
+
+    // Clear all hands from the last round
+    this._sessions.forEach((session) => {
+      this._sessions.forEach((s) => {
+        session.send(new GameAction.ClearHand({ id: s.id }));
+      });
+    });
+    this._hands = {};
+    this._top = [];
+    this._passInRow = 0;
+    this._currentWinScore = this._sessions.length - 1;
+    this._history = [];
+
+    const deck = Card.deck();
+    Card.shuffle(deck);
+
+    this._sessions.forEach((session) => {
+      this._hands[session.id] = [];
+      const cards = deck.splice(0, 1);
+      cards.sort(Card.compare);
+      this._drawCards(session, cards);
+    });
+
+    // TODO: change this
+    this._turnIndex = -1;
+    this._incrementTurn();
   }
 
   /**
@@ -40,6 +75,14 @@ export class BigTwo {
    */
   resendHistory(session: Session): void {
     session.sendSessionsList(this._sessions);
+    const current = this._sessions[this._turnIndex];
+    session.send(
+      new NetworkMessage.SetTurn({
+        id: current.id,
+        name: current.name,
+        color: current.color,
+      })
+    );
     this._history.forEach((action) => this._sendFiltered(session, action));
   }
 
@@ -51,8 +94,9 @@ export class BigTwo {
     }
   };
 
-  private _reset() {
+  private _beginTrick() {
     const message = new NetworkMessage.BeginTrick();
+    this._round = 0;
     this._sessions.forEach((s) => s.send(message));
     this._top.length = 0;
     this._passInRow = 0;
@@ -67,6 +111,11 @@ export class BigTwo {
     payload: GameAction.PlayCards.Payload,
     callback: (arg: boolean) => void
   ) => {
+    if (this._restarting) {
+      callback && callback(false);
+      return;
+    }
+
     // Is this our turn?
     if (this._sessions[this._turnIndex].id !== session.id) {
       session.sendSystemChat(`It's not your turn.`);
@@ -93,8 +142,8 @@ export class BigTwo {
       }
     }
 
+    // Cards are valid, play them
     if (this._isValid(this._top, cards, session)) {
-      // Cards are valid, play them
       this._top = cards;
 
       for (let i = cards.length - 1; i >= 0; i--) {
@@ -107,7 +156,7 @@ export class BigTwo {
       session.broadcast(action);
       callback && callback(true);
       this._passInRow = 0;
-      this._incrementTurn();
+      if (this._endActionChecker(session)) this._incrementTurn();
       return;
     }
 
@@ -117,14 +166,14 @@ export class BigTwo {
   private _handlePass = (session: Session) => (
     payload: NetworkMessage.FromClientChat.Payload
   ) => {
-    if (payload.message === "/pass") {
+    if (payload.message === '/pass') {
       if (this._sessions[this._turnIndex].id !== session.id) {
         session.sendSystemChat(`It's not your turn.`);
       } else {
-        session.sendSystemChat("You passed.");
+        session.sendSystemChat('You passed.');
         this._passInRow += 1;
         if (this._passInRow === this._sessions.length - 1) {
-          this._reset();
+          this._beginTrick();
         }
         this._incrementTurn();
       }
@@ -133,9 +182,11 @@ export class BigTwo {
 
   private _incrementTurn() {
     this._turnIndex = (this._turnIndex + 1) % this._sessions.length;
+    while (this._hands[this._sessions[this._turnIndex].id].length === 0) {
+      this._turnIndex += 1;
+    }
     this._sessions.forEach((s) => {
       const player = this._sessions[this._turnIndex];
-      s.sendSystemChat(`It is now ${player.name}'s turn.`);
       s.send(
         new NetworkMessage.SetTurn({
           id: player.id,
@@ -147,17 +198,62 @@ export class BigTwo {
   }
 
   /**
+   * Award points, check if game has ended, etc.
+   * @param session who just acted
+   * @returns whether the round should continue.
+   */
+  private _endActionChecker(session: Session): boolean {
+    if (this._checkWon(session)) {
+      session.score += this._currentWinScore;
+      this._broadcastChat(
+        `${session.name} has won ${this._currentWinScore} points!`
+      );
+
+      this._currentWinScore--;
+      if (this._currentWinScore === 0) {
+        if (this._round >= this._maxRounds) {
+          this._endGame();
+        } else {
+          this._restarting = true;
+          this._broadcastChat(`Round over! Restarting...`);
+          setTimeout(() => {
+            this._restarting = false;
+            this.restart();
+          }, roundRestartDelay);
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private _endGame() {
+    let msg = '';
+    msg += `Game Over!\n`;
+    this._sessions.sort((a, b) => b.score - a.score);
+    this._sessions.forEach((s, index) => {
+      msg += `${s.name}: ${placementMsgs[index]}\n`;
+    });
+    this._broadcastChat(msg);
+    this._sessions.forEach((s) => s.close());
+  }
+
+  private _broadcastChat(message: string) {
+    this._sessions.forEach((s) => s.sendSystemChat(message));
+  }
+
+  /**
    * Check the cards with the top of the stack. return true if cards are valid.
    * These rules are specific to Big Two.
    * @param cards The cards trying to be played
    */
   private _isValid(top: Card.Card[], cards: Card.Card[], session: Session) {
     cards.sort(Card.compare);
-    if (cards.length === 0) throw Error("Tried to play 0 cards");
+    if (cards.length === 0) throw Error('Tried to play 0 cards');
 
     if (top.length > 0 && top.length !== cards.length) {
       session.sendSystemChat(
-        "You must play a hand of the same length as the last."
+        'You must play a hand of the same length as the last.'
       );
       return false;
     }
@@ -168,7 +264,7 @@ export class BigTwo {
       for (let i = 0; i < cards.length; i++) {
         if (cards[i].value != cards[0].value) {
           session.sendSystemChat(
-            "You must play cards that are of the same value."
+            'You must play cards that are of the same value.'
           );
           return false;
         }
@@ -181,7 +277,7 @@ export class BigTwo {
       const len = top.length;
       if (Card.compare(top[len - 1], cards[len - 1]) > 0) {
         session.sendSystemChat(
-          "You must play cards of higher value than those of the last."
+          'You must play cards of higher value than those of the last.'
         );
         return false;
       }
@@ -199,8 +295,17 @@ export class BigTwo {
       id: session.id,
       cards: cards,
     });
+    this._history.push(action);
     this._sessions.forEach((s) => {
       this._sendFiltered(s, action);
     });
+  }
+
+  /**
+   * Check if a session has won (has no cards left).
+   */
+  private _checkWon(session: Session): boolean {
+    if (this._hands[session.id].length === 0) return true;
+    return false;
   }
 }
