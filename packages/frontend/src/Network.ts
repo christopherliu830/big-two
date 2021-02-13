@@ -11,15 +11,10 @@ export class Connection {
 
   // Don't destroy?
   constructor(url: string, config: Message.Base) {
-    console.log('connect', url);
     this._socket = io(url);
 
     this.once(Message.Type.Connect, () => {
       this.send(config);
-    });
-
-    this._socket.onAny((...args: unknown[]) => {
-      console.log('Received:\n', ...args);
     });
   }
 
@@ -29,11 +24,6 @@ export class Connection {
 
   on(type: Message.Type, handler: Handler): void {
     this._socket.on(type, handler);
-    console.log(
-      `Registered handler for ${type}, now ${
-        this._socket.listeners(type).length
-      }. Handler is: \n${handler}`
-    );
   }
 
   once(type: Message.Type, handler: Handler): void {
@@ -42,11 +32,6 @@ export class Connection {
 
   off(type: Message.Type, handler: Handler): void {
     this._socket.off(type, handler);
-    console.log(
-      `Deregistered handler for ${type} now ${
-        this._socket.listeners(type).length
-      }`
-    );
   }
 
   close(): Socket {
