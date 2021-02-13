@@ -59,7 +59,7 @@ export class BigTwo {
 
     this._sessions.forEach((session) => {
       this._hands[session.id] = [];
-      const cards = deck.splice(0, 1);
+      const cards = deck.splice(0, 13);
       cards.sort(Card.compare);
       this._drawCards(session, cards);
     });
