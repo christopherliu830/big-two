@@ -7,7 +7,6 @@ export default {
   },
 
   close(id: string): void {
-    console.log('Destroying room', id);
     delete tables[id];
   },
 

@@ -49,7 +49,7 @@ export abstract class Session extends Emitter {
   }
 
   sendAll(message: Message.Base): void {
-    this.table.io.emit(message.header, message.payload);
+    this.table.io.to(this.table.id).emit(message.header, message.payload);
   }
 }
 
@@ -183,7 +183,7 @@ export class ClientSession extends Session {
         color: this.color,
       },
     });
-    this.table.io.emit(message.header, message.payload);
+    this.table.io.to(this.table.id).emit(message.header, message.payload);
   }
 }
 
@@ -228,6 +228,6 @@ export class FakeSession extends Session {
   }
 
   broadcast(message: Message.Base): void {
-    this.table.io.emit(message.header, message.payload);
+    this.table.io.to(this.table.id).emit(message.header, message.payload);
   }
 }
